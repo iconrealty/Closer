@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Elevated Cream & Structural Tan Neutrals */
+  --color-cream: #FFFDF8;
+  --color-tan-50: #FAF7F0;
+  --color-tan-100: #F2ECE0;
+  --color-tan-200: #E5DCCB;
+  --color-tan-300: #D4C7B0;
+  --color-tan-400: #B3A287;
+  --color-tan-500: #85755C;
+  --color-tan-600: #665944;
+
+  /* Olive Green Accents & Charcoal-Olive Ink */
+  --color-olive-50: #F4F6EE;
+  --color-olive-100: #E6EBDA;
+  --color-olive-200: #CDD7BC;
+  --color-olive-600: #556738;
+  --color-olive-700: #44532B;
+  --color-olive-800: #364222;
+  --color-olive-900: #242B18;
+
+  /* Restrained Earthy Rust for Overdue / Destructive */
+  --color-rust-50: #FBF1EE;
+  --color-rust-200: #EBC8BE;
+  --color-rust-600: #B54434;
+  --color-rust-700: #933427;
+}
+
+@layer base {
+  html,
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    background-color: var(--color-tan-50);
+    color: var(--color-olive-900);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.011em;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+  }
+
+  /* Clean tabular numerals for prices, counts, and dates */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Crisp, minimal warm-tan scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(133, 117, 92, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(133, 117, 92, 0.45);
+}

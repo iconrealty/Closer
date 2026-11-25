@@ -1,0 +1,6 @@
+{
+  "name": "AcreFlow CRM",
+  "description": "Minimalist, no-BS real estate follow-up CRM built for real estate agents to manage clients, daily follow-ups, and pipeline velocity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

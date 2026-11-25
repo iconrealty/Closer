@@ -1,0 +1,446 @@
+import React, { useState } from 'react';
+import { useCrm } from '../../context/CrmContext';
+import { ClientType, ClientStage, Priority, LeadSource, SecondaryContact } from '../../types/crm';
+import { BudgetRangeSlider } from '../common/BudgetRangeSlider';
+import { X, UserPlus, Users, Trash2 } from 'lucide-react';
+
+interface AddClientModalProps {
+  onClose: () => void;
+  onClientAdded?: (client: any) => void;
+}
+
+export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClientAdded }) => {
+  const { addClient } = useCrm();
+
+  // Primary Client State (Separated First & Last Name)
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+
+  // 2nd Client (Co-Buyer / Spouse / Partner)
+  const [hasSecondaryContact, setHasSecondaryContact] = useState(false);
+  const [secFirstName, setSecFirstName] = useState('');
+  const [secLastName, setSecLastName] = useState('');
+  const [secPhone, setSecPhone] = useState('');
+  const [secEmail, setSecEmail] = useState('');
+  const [secRelationship, setSecRelationship] = useState('Spouse / Co-Buyer');
+
+  // Real Estate Details
+  const [type, setType] = useState<ClientType>('buyer');
+  const [stage, setStage] = useState<ClientStage>('new_lead');
+  const [priority, setPriority] = useState<Priority>('hot');
+  const [source, setSource] = useState<LeadSource>('Sphere of Influence');
+  const [targetPriceMin, setTargetPriceMin] = useState<number>(400000);
+  const [targetPriceMax, setTargetPriceMax] = useState<number>(600000);
+  const [locationsInput, setLocationsInput] = useState('');
+  const [criteriaNotes, setCriteriaNotes] = useState('');
+  const [preApproved, setPreApproved] = useState(false);
+  const [lenderName, setLenderName] = useState('');
+  const [nextFollowUpDate, setNextFollowUpDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
+  const [nextFollowUpNote, setNextFollowUpNote] = useState('Initial follow-up call & inquiry review');
+  const [lastContactedDate, setLastContactedDate] = useState(() => new Date().toISOString().split('T')[0]);
+
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
+      setFormError('Please provide at least a First Name, Last Name, and Phone Number.');
+      return;
+    }
+    setFormError(null);
+
+    const locations = locationsInput
+      .split(',')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    let secondaryContact: SecondaryContact | undefined = undefined;
+    if (hasSecondaryContact && (secFirstName.trim() || secLastName.trim())) {
+      secondaryContact = {
+        firstName: secFirstName.trim(),
+        lastName: secLastName.trim() || lastName.trim(),
+        phone: secPhone.trim(),
+        email: secEmail.trim(),
+        relationship: secRelationship.trim(),
+      };
+    }
+
+    const newClient = addClient({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      phone: phone.trim(),
+      email: email.trim() || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@gmail.com`,
+      hasSecondaryContact: !!secondaryContact,
+      secondaryContact,
+      type,
+      stage,
+      priority,
+      source,
+      targetPriceMin: targetPriceMin || 400000,
+      targetPriceMax: targetPriceMax || 600000,
+      locations: locations.length > 0 ? locations : ['Metropolitan Area'],
+      criteriaNotes: criteriaNotes.trim(),
+      preApproved,
+      lenderName: preApproved ? lenderName.trim() : undefined,
+      nextFollowUpDate,
+      nextFollowUpNote: nextFollowUpNote.trim(),
+      lastContactedAt: new Date(lastContactedDate + 'T12:00:00').toISOString(),
+      tags: [priority === 'hot' ? 'Hot Lead' : 'Active Pipeline', type],
+    });
+
+    if (onClientAdded) {
+      onClientAdded(newClient);
+    }
+    onClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-olive-900/35 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="bg-cream border border-tan-200 rounded-xl max-w-xl w-full p-6 shadow-2xl space-y-5 my-auto max-h-[92vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between pb-3 border-b border-tan-200">
+          <div className="flex items-center gap-2">
+            <UserPlus className="w-5 h-5 text-olive-700" />
+            <h2 className="text-lg font-bold text-olive-900">Add Client</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-tan-400 hover:text-olive-900 rounded hover:bg-tan-100 transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {formError && (
+            <div className="p-2.5 bg-rust-50 border border-rust-200 text-rust-700 rounded-lg text-xs font-medium">
+              {formError}
+            </div>
+          )}
+
+          {/* Primary Client Section */}
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold text-tan-500 uppercase tracking-wider block">
+              Primary Client Information
+            </span>
+
+            {/* Separated First Name & Last Name */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-olive-900 mb-1 font-semibold">
+                  First Name <span className="text-rust-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Jessica"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-olive-900 mb-1 font-semibold">
+                  Last Name <span className="text-rust-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Williams"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                />
+              </div>
+            </div>
+
+            {/* Phone & Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-olive-900 mb-1 font-semibold">
+                  Phone Number <span className="text-rust-600">*</span>
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="(512) 555-0199"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700 tabular-nums"
+                />
+              </div>
+
+              <div>
+                <label className="block text-olive-900 mb-1 font-semibold">Email Address</label>
+                <input
+                  type="email"
+                  placeholder="jessica.williams@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Option for 2nd Client (Co-Buyer / Spouse / Partner) */}
+          <div className="pt-2 border-t border-tan-100">
+            {!hasSecondaryContact ? (
+              <button
+                type="button"
+                onClick={() => setHasSecondaryContact(true)}
+                className="w-full py-2 px-3 border border-dashed border-olive-200 bg-olive-50/60 hover:bg-olive-50 text-olive-700 rounded-lg flex items-center justify-center gap-2 font-semibold transition-colors cursor-pointer"
+              >
+                <Users className="w-4 h-4 text-olive-700" />
+                <span>+ Add 2nd Client (Co-Buyer / Spouse / Partner)</span>
+              </button>
+            ) : (
+              <div className="bg-tan-50 border border-tan-200 rounded-lg p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-olive-700" />
+                    <span className="font-bold text-olive-900">2nd Client (Co-Buyer / Spouse)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHasSecondaryContact(false);
+                      setSecFirstName('');
+                      setSecLastName('');
+                      setSecPhone('');
+                      setSecEmail('');
+                    }}
+                    className="text-tan-400 hover:text-rust-600 p-1 rounded cursor-pointer"
+                    title="Remove 2nd client"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-tan-600 mb-1 font-medium">2nd Client First Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. David"
+                      value={secFirstName}
+                      onChange={(e) => setSecFirstName(e.target.value)}
+                      className="w-full bg-cream border border-tan-300 rounded px-2.5 py-1.5 text-olive-900 focus:outline-none focus:border-olive-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-tan-600 mb-1 font-medium">2nd Client Last Name</label>
+                    <input
+                      type="text"
+                      placeholder={lastName || 'Last Name'}
+                      value={secLastName}
+                      onChange={(e) => setSecLastName(e.target.value)}
+                      className="w-full bg-cream border border-tan-300 rounded px-2.5 py-1.5 text-olive-900 focus:outline-none focus:border-olive-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block text-tan-600 mb-1 font-medium">Phone</label>
+                    <input
+                      type="tel"
+                      placeholder="(512) 555-0200"
+                      value={secPhone}
+                      onChange={(e) => setSecPhone(e.target.value)}
+                      className="w-full bg-cream border border-tan-300 rounded px-2.5 py-1.5 text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-tan-600 mb-1 font-medium">Email</label>
+                    <input
+                      type="email"
+                      placeholder="partner@gmail.com"
+                      value={secEmail}
+                      onChange={(e) => setSecEmail(e.target.value)}
+                      className="w-full bg-cream border border-tan-300 rounded px-2.5 py-1.5 text-olive-900 focus:outline-none focus:border-olive-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-tan-600 mb-1 font-medium">Relationship</label>
+                    <select
+                      value={secRelationship}
+                      onChange={(e) => setSecRelationship(e.target.value)}
+                      className="w-full bg-cream border border-tan-300 rounded px-2 py-1.5 text-olive-900 focus:outline-none focus:border-olive-700"
+                    >
+                      <option value="Spouse / Co-Buyer">Spouse / Co-Buyer</option>
+                      <option value="Partner">Partner</option>
+                      <option value="Co-Borrower">Co-Borrower</option>
+                      <option value="Investor Partner">Investor Partner</option>
+                      <option value="Family Member">Family Member</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Lead Details: Type, Priority, Stage, Source */}
+          <div className="pt-2 border-t border-tan-100">
+            <span className="text-[11px] font-bold text-tan-500 uppercase tracking-wider block mb-2">
+              Lead Criteria & Pipeline
+            </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div>
+                <label className="block text-olive-900 mb-1 font-semibold">Client Type</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value as ClientType)}
+                  className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 capitalize focus:outline-none focus:border-olive-700"
+                >
+                  <option value="buyer">Buyer</option>
+                  <option value="seller">Seller</option>
+                  <option value="buyer_seller">Buyer + Seller</option>
+                  <option value="investor">Investor</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-olive-900 mb-1 font-semibold">Priority</label>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as Priority)}
+                  className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 capitalize focus:outline-none focus:border-olive-700"
+                >
+                  <option value="hot">Hot (0-30d)</option>
+                  <option value="warm">Warm (1-3mo)</option>
+                  <option value="cold">Cold (3-6mo+)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-olive-900 mb-1 font-semibold">Stage</label>
+                <select
+                  value={stage}
+                  onChange={(e) => setStage(e.target.value as ClientStage)}
+                  className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 focus:outline-none focus:border-olive-700"
+                >
+                  <option value="new_lead">New Lead</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="active_showing">Active Showing</option>
+                  <option value="under_contract">Under Contract</option>
+                  <option value="closed">Closed</option>
+                  <option value="long_term_nurture">Nurture</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Linear Budget Range Slider with Dots */}
+          <div className="bg-tan-50 border border-tan-200 rounded-lg p-3.5 space-y-2">
+            <span className="text-[11px] font-bold text-olive-900 uppercase tracking-wider block">
+              Budget Range (Min – Max)
+            </span>
+            <BudgetRangeSlider
+              min={targetPriceMin}
+              max={targetPriceMax}
+              onChange={(newMin, newMax) => {
+                setTargetPriceMin(newMin);
+                setTargetPriceMax(newMax);
+              }}
+            />
+          </div>
+
+          {/* Locations & Criteria */}
+          <div>
+            <label className="block text-olive-900 mb-1 font-semibold">
+              Target Neighborhoods / Cities (comma-separated)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Irvine, Newport Beach, Laguna Beach"
+              value={locationsInput}
+              onChange={(e) => setLocationsInput(e.target.value)}
+              className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+            />
+          </div>
+
+          <div>
+            <label className="block text-olive-900 mb-1 font-semibold">
+              The Reason for their move
+            </label>
+            <textarea
+              rows={2}
+              placeholder="e.g. Outgrowing current home, closer to schools or family, relocating for work..."
+              value={criteriaNotes}
+              onChange={(e) => setCriteriaNotes(e.target.value)}
+              className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+            />
+          </div>
+
+          {/* Communication & Follow-Up Scheduling */}
+          <div className="pt-2 border-t border-tan-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-olive-900 mb-1 font-semibold">
+                Last Communication Date
+              </label>
+              <input
+                type="date"
+                value={lastContactedDate}
+                onChange={(e) => setLastContactedDate(e.target.value)}
+                className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+              />
+            </div>
+
+            <div>
+              <label className="block text-olive-900 mb-1 font-semibold">
+                Next Follow-Up Date
+              </label>
+              <input
+                type="date"
+                required
+                value={nextFollowUpDate}
+                onChange={(e) => setNextFollowUpDate(e.target.value)}
+                className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+              />
+            </div>
+
+            <div>
+              <label className="block text-olive-900 mb-1 font-semibold">
+                Follow-Up Task
+              </label>
+              <input
+                type="text"
+                value={nextFollowUpNote}
+                onChange={(e) => setNextFollowUpNote(e.target.value)}
+                className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 focus:outline-none focus:border-olive-700"
+              />
+            </div>
+          </div>
+
+          <div className="pt-3 flex items-center justify-end gap-3 border-t border-tan-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded text-tan-600 hover:text-olive-900 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-olive-700 hover:bg-olive-800 text-cream font-semibold rounded transition-colors cursor-pointer"
+            >
+              Save Client to CRM
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
