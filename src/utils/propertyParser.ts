@@ -15,10 +15,12 @@ export function parsePropertyText(rawText: string): Partial<SentProperty> {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  // 1. URL extraction
-  const urlMatch = text.match(/https?:\/\/[^\s"'<>]+/i);
+  // 1. URL extraction (including bare portal.onehome.com / zillow.com / redfin.com links)
+  const urlMatch =
+    text.match(/https?:\/\/[^\s"'<>]+/i) ||
+    text.match(/\b(?:portal\.onehome\.com|(?:www\.)?zillow\.com|(?:www\.)?redfin\.com)\/[^\s"'<>]+/i);
   if (urlMatch) {
-    result.url = urlMatch[0];
+    result.url = /^https?:\/\//i.test(urlMatch[0]) ? urlMatch[0] : `https://${urlMatch[0]}`;
   }
 
   // 2. Address extraction
@@ -214,6 +216,71 @@ export function parsePropertyText(rawText: string): Partial<SentProperty> {
   }
 
   return result;
+}
+
+/**
+ * Checks whether a URL is a OneHome portal link that requires server-side resolution.
+ */
+export function isOneHomePropertyUrl(rawUrl?: string): boolean {
+  if (!rawUrl) return false;
+  try {
+    const normalized = /^https?:\/\//i.test(rawUrl.trim())
+      ? rawUrl.trim()
+      : `https://${rawUrl.trim()}`;
+    const parsed = new URL(normalized);
+    if (parsed.hostname.toLowerCase() !== 'portal.onehome.com') return false;
+    return (
+      /\/(?:share|property|properties)\//i.test(parsed.pathname) ||
+      parsed.searchParams.has('token')
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolves a OneHome portal URL into address and price via /api/resolve-property.
+ */
+export async function resolveRemotePropertyUrl(
+  rawUrl: string,
+  signal?: AbortSignal
+): Promise<Partial<SentProperty> | null> {
+  const normalized = /^https?:\/\//i.test(rawUrl.trim())
+    ? rawUrl.trim()
+    : `https://${rawUrl.trim()}`;
+
+  const response = await fetch('/api/resolve-property', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: normalized }),
+    signal,
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = (await response.json()) as {
+    address?: string;
+    price?: number;
+    beds?: number;
+    baths?: number;
+    sqft?: number;
+    url?: string;
+  };
+
+  if (!data.address && data.price === undefined) {
+    return null;
+  }
+
+  return {
+    url: data.url || normalized,
+    address: data.address,
+    price: data.price,
+    beds: data.beds,
+    baths: data.baths,
+    constructionSqft: data.sqft,
+  };
 }
 
 /**

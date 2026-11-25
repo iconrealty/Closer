@@ -260,6 +260,14 @@ export const openRedfinSearch = (criteria: PropertySearchCriteria): void => {
   window.open(url, '_blank', 'noopener,noreferrer');
 };
 
+const formatPromptPrice = (amount: number): string => {
+  if (amount >= 1000000) {
+    const millions = Number((amount / 1000000).toFixed(3));
+    return `$${millions}M`;
+  }
+  return `$${Math.round(amount / 1000)}k`;
+};
+
 /**
  * Builds a pre-filled ChatGPT search URL with the client's exact criteria and city
  */
@@ -283,11 +291,11 @@ export const buildChatGptSearchUrl = (criteria: PropertySearchCriteria): string 
       ? criteria.maxPrice
       : undefined;
   if (min && max) {
-    details.push(`price $${Math.round(min / 1000)}k to $${Math.round(max / 1000)}k`);
+    details.push(`price ${formatPromptPrice(min)} to ${formatPromptPrice(max)}`);
   } else if (min) {
-    details.push(`over $${Math.round(min / 1000)}k`);
+    details.push(`over ${formatPromptPrice(min)}`);
   } else if (max) {
-    details.push(`under $${Math.round(max / 1000)}k`);
+    details.push(`under ${formatPromptPrice(max)}`);
   }
 
   if (criteria.bedsMin && criteria.bedsMin > 0) {

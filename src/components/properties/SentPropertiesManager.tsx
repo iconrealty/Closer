@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useCrm } from '../../context/CrmContext';
 import { Client, SentProperty, SentPropertyStatus } from '../../types/crm';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { parsePropertyText } from '../../utils/propertyParser';
+import {
+  parsePropertyText,
+  isOneHomePropertyUrl,
+  resolveRemotePropertyUrl,
+} from '../../utils/propertyParser';
 import {
   ExternalLink,
   Plus,
@@ -16,6 +20,7 @@ import {
   Printer,
   Edit2,
   X,
+  Loader2,
 } from 'lucide-react';
 
 interface SentPropertiesManagerProps {
@@ -46,11 +51,24 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
   const [showingTime, setShowingTime] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [linkPriceHint, setLinkPriceHint] = useState(false);
+  const [isResolvingLink, setIsResolvingLink] = useState(false);
+  const [linkErrorHint, setLinkErrorHint] = useState(false);
+
+  const lookupAbortRef = useRef<AbortController | null>(null);
+  const lastResolvedUrlRef = useRef<string>('');
+  const autoFilledAddressRef = useRef<string>('');
+  const autoFilledPriceRef = useRef<string>('');
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'to_show' | 'showing_scheduled' | 'shown'>('all');
   const [deletingPropId, setDeletingPropId] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      lookupAbortRef.current?.abort();
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -58,6 +76,11 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
   };
 
   const resetForm = () => {
+    lookupAbortRef.current?.abort();
+    lookupAbortRef.current = null;
+    lastResolvedUrlRef.current = '';
+    autoFilledAddressRef.current = '';
+    autoFilledPriceRef.current = '';
     setAddress('');
     setUrl('');
     setPrice('');
@@ -66,11 +89,18 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
     setShowingTime('');
     setNotes('');
     setLinkPriceHint(false);
+    setIsResolvingLink(false);
+    setLinkErrorHint(false);
     setIsAdding(false);
     setEditingPropertyId(null);
   };
 
   const startEditProperty = (prop: SentProperty) => {
+    lookupAbortRef.current?.abort();
+    lookupAbortRef.current = null;
+    lastResolvedUrlRef.current = prop.url || '';
+    autoFilledAddressRef.current = '';
+    autoFilledPriceRef.current = '';
     setEditingPropertyId(prop.id);
     setAddress(prop.address || '');
     setUrl(prop.url || '');
@@ -79,25 +109,94 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
     setShowingDate(prop.showingDate || '');
     setShowingTime(prop.showingTime || '');
     setNotes(prop.notes || '');
+    setLinkPriceHint(false);
+    setIsResolvingLink(false);
+    setLinkErrorHint(false);
     setIsAdding(true);
   };
 
   const handleUrlChange = (nextInput: string) => {
     const trimmed = nextInput.trim();
     const parsed = parsePropertyText(trimmed);
+    const resolvedUrl = parsed.url || nextInput;
 
-    setUrl(parsed.url || nextInput);
+    setUrl(resolvedUrl);
 
-    if (!address.trim() && parsed.address) {
+    if (parsed.address && (!address.trim() || address === autoFilledAddressRef.current)) {
       setAddress(parsed.address);
+      autoFilledAddressRef.current = parsed.address;
     }
 
-    if (parsed.price !== undefined) {
-      setPrice(String(parsed.price));
+    if (parsed.price !== undefined && (!price.trim() || price === autoFilledPriceRef.current)) {
+      const nextPrice = String(parsed.price);
+      setPrice(nextPrice);
+      autoFilledPriceRef.current = nextPrice;
       setLinkPriceHint(false);
-    } else if (/^https?:\/\//i.test(trimmed) && !price.trim()) {
+    }
+
+    const candidateUrl = parsed.url || trimmed;
+    if (isOneHomePropertyUrl(candidateUrl)) {
+      setLinkPriceHint(false);
+      setLinkErrorHint(false);
+
+      if (lastResolvedUrlRef.current === candidateUrl) {
+        return;
+      }
+
+      lookupAbortRef.current?.abort();
+      const controller = new AbortController();
+      lookupAbortRef.current = controller;
+      lastResolvedUrlRef.current = candidateUrl;
+      setIsResolvingLink(true);
+
+      void resolveRemotePropertyUrl(candidateUrl, controller.signal)
+        .then((remote) => {
+          if (controller.signal.aborted) return;
+          if (!remote) {
+            setLinkErrorHint(true);
+            return;
+          }
+          if (remote.address) {
+            setAddress((prev) => {
+              if (!prev.trim() || prev === autoFilledAddressRef.current) {
+                autoFilledAddressRef.current = remote.address || '';
+                return remote.address || prev;
+              }
+              return prev;
+            });
+          }
+          if (remote.price !== undefined) {
+            const remotePriceStr = String(remote.price);
+            setPrice((prev) => {
+              if (!prev.trim() || prev === autoFilledPriceRef.current) {
+                autoFilledPriceRef.current = remotePriceStr;
+                return remotePriceStr;
+              }
+              return prev;
+            });
+          }
+        })
+        .catch((err) => {
+          if (err instanceof DOMException && err.name === 'AbortError') return;
+          if (!controller.signal.aborted) {
+            setLinkErrorHint(true);
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setIsResolvingLink(false);
+          }
+        });
+      return;
+    }
+
+    lookupAbortRef.current?.abort();
+    setIsResolvingLink(false);
+    setLinkErrorHint(false);
+
+    if (parsed.price === undefined && /^https?:\/\//i.test(trimmed) && !price.trim()) {
       setLinkPriceHint(true);
-    } else {
+    } else if (parsed.price === undefined) {
       setLinkPriceHint(false);
     }
   };
@@ -306,29 +405,46 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
 
             <div>
               <label className="block font-medium text-tan-600 mb-1">
-                Property Link (Zillow / Redfin / MLS)
+                Property Link (Zillow / Redfin / OneHome)
               </label>
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="https://www.zillow.com/... or https://www.redfin.com/..."
+                  placeholder="https://portal.onehome.com/..., Zillow, or Redfin link"
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
                   className="w-full bg-cream border border-tan-300 rounded-lg px-3 py-2 text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700 pr-8"
                 />
-                {url && (
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute right-2.5 top-2.5 text-olive-700 hover:text-olive-900"
-                    title="Open link"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                {isResolvingLink ? (
+                  <Loader2
+                    className="w-3.5 h-3.5 text-olive-700 animate-spin absolute right-2.5 top-2.5"
+                    aria-label="Looking up property details"
+                  />
+                ) : (
+                  url && (
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute right-2.5 top-2.5 text-olive-700 hover:text-olive-900"
+                      title="Open link"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )
                 )}
               </div>
-              {linkPriceHint && (
+              {isResolvingLink && (
+                <p className="text-[11px] text-olive-700 mt-1">
+                  Extracting address and price from OneHome link...
+                </p>
+              )}
+              {!isResolvingLink && linkErrorHint && (
+                <p className="text-[11px] text-tan-500 mt-1">
+                  Could not extract property details from this link — enter address and price manually.
+                </p>
+              )}
+              {!isResolvingLink && !linkErrorHint && linkPriceHint && (
                 <p className="text-[11px] text-tan-500 mt-1">
                   This link doesn&apos;t include the price in its URL — enter Price below if needed.
                 </p>
