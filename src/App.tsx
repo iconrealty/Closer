@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CrmProvider, useCrm } from './context/CrmContext';
 import { GmailNavbar } from './components/inbox/GmailNavbar';
 import { GmailSidebar, GmailFolderId } from './components/inbox/GmailSidebar';
@@ -11,9 +11,23 @@ import { ScriptsView } from './components/scripts/ScriptsView';
 import { ClientDetailModal } from './components/modals/ClientDetailModal';
 import { AddClientModal } from './components/modals/AddClientModal';
 import { QuickCommModal } from './components/modals/QuickCommModal';
+import { MobileBottomNav } from './components/layout/MobileBottomNav';
+import { CloserLandingPage } from './components/landing/CloserLandingPage';
+import { CloserAuthPage } from './components/auth/CloserAuthPage';
+import { GoogleSessionUser, initAuth, logout } from './lib/firebaseAuth';
 import { Client, Priority, ClientType, SentProperty } from './types/crm';
 
-const CrmAppContent: React.FC = () => {
+const SESSION_KEY = 'closer_entered_app';
+
+interface CrmAppContentProps {
+  googleUser: GoogleSessionUser | null;
+  onReturnToLanding: () => void;
+}
+
+const CrmAppContent: React.FC<CrmAppContentProps> = ({
+  googleUser,
+  onReturnToLanding,
+}) => {
   const {
     selectedClient,
     setSelectedClient,
@@ -58,14 +72,17 @@ const CrmAppContent: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen bg-tan-50 text-olive-900 flex flex-col font-sans selection:bg-olive-700 selection:text-cream overflow-hidden">
-      {/* 1. Gmail-style Top Navbar */}
+    <div className="h-dvh w-screen bg-tan-50 text-olive-900 flex flex-col font-sans selection:bg-olive-700 selection:text-cream overflow-hidden">
+      {/* 1. Top Navbar */}
       <GmailNavbar
+        googleUser={googleUser}
         onToggleSidebar={() => setIsSidebarOpenMobile((prev) => !prev)}
+        onGoDashboard={() => setSelectedFolder('dashboard')}
+        onReturnToLanding={onReturnToLanding}
       />
 
       {/* 2. Main 2-Column Layout */}
-      <div className="flex-1 flex flex-row overflow-hidden relative">
+      <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
         {/* Mobile Sidebar Backdrop */}
         {isSidebarOpenMobile && (
           <div
@@ -74,7 +91,7 @@ const CrmAppContent: React.FC = () => {
           />
         )}
 
-        {/* LEFT COLUMN: Folders & Relevant Information Sidebar */}
+        {/* LEFT COLUMN: Folders & Relevant Information Sidebar (Desktop) */}
         <div
           className={`fixed md:static inset-y-0 left-0 z-50 md:z-0 transform transition-transform duration-200 ease-in-out md:translate-x-0 ${
             isSidebarOpenMobile ? 'translate-x-0' : '-translate-x-full'
@@ -95,7 +112,7 @@ const CrmAppContent: React.FC = () => {
         </div>
 
         {/* CENTER COLUMN: Main Content Area */}
-        <main className="flex-1 flex flex-col min-w-0 bg-cream overflow-hidden">
+        <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-cream overflow-hidden">
           {/* 0. Main Tabbed Dashboard Workspace */}
           {(selectedFolder === 'dashboard' ||
             selectedFolder === 'follow_through' ||
@@ -129,7 +146,7 @@ const CrmAppContent: React.FC = () => {
 
           {/* B. All Contacts Directory */}
           {selectedFolder === 'all_contacts' && (
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto pb-28 md:pb-0">
               <ContactsTable
                 onOpenClient={(client) => setSelectedClient(client)}
                 onOpenCompose={handleOpenCompose}
@@ -147,7 +164,7 @@ const CrmAppContent: React.FC = () => {
 
           {/* D. Pipeline Board */}
           {selectedFolder === 'pipeline_board' && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-6">
               <PipelineBoard
                 onOpenClient={(client) => setSelectedClient(client)}
               />
@@ -156,7 +173,7 @@ const CrmAppContent: React.FC = () => {
 
           {/* E. Quick Scripts */}
           {selectedFolder === 'scripts' && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-6">
               <ScriptsView
                 onOpenCompose={handleOpenCompose}
               />
@@ -164,6 +181,18 @@ const CrmAppContent: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Mobile Floating Bottom Navigation Bar */}
+      <MobileBottomNav
+        googleUser={googleUser}
+        selectedFolder={selectedFolder}
+        onSelectFolder={(folder) => setSelectedFolder(folder)}
+        selectedPriorityFilter={priorityFilter}
+        onSelectPriorityFilter={setPriorityFilter}
+        selectedTypeFilter={typeFilter}
+        onSelectTypeFilter={setTypeFilter}
+        onReturnToLanding={onReturnToLanding}
+      />
 
       {/* Client Detail Modal */}
       {selectedClient && (
@@ -196,10 +225,101 @@ const CrmAppContent: React.FC = () => {
   );
 };
 
+type AppView = 'landing' | 'sign-in' | 'sign-up' | 'app';
+
 export default function App() {
+  const [googleUser, setGoogleUser] = useState<GoogleSessionUser | null>(null);
+  const [view, setView] = useState<AppView>(() => {
+    try {
+      return sessionStorage.getItem(SESSION_KEY) === '1' ? 'app' : 'landing';
+    } catch {
+      return 'landing';
+    }
+  });
+
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (user) => {
+        setGoogleUser({
+          uid: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+        });
+      },
+      () => {
+        setGoogleUser(null);
+      }
+    );
+    return unsubscribe;
+  }, []);
+
+  const handleAuthenticated = (signedInUser?: GoogleSessionUser) => {
+    if (signedInUser) {
+      setGoogleUser(signedInUser);
+    }
+    try {
+      sessionStorage.setItem(SESSION_KEY, '1');
+    } catch {
+      // Ignore storage errors in restricted environments
+    }
+    setView('app');
+    window.scrollTo({ top: 0 });
+  };
+
+  const handleReturnToLanding = async () => {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+    try {
+      await logout();
+    } catch {
+      // Ignore Firebase sign-out errors if user was in local session
+    }
+    setGoogleUser(null);
+    setView('landing');
+    window.scrollTo({ top: 0 });
+  };
+
+  if (view === 'landing') {
+    return (
+      <CloserLandingPage
+        onSignIn={() => {
+          setView('sign-in');
+          window.scrollTo({ top: 0 });
+        }}
+        onSignUp={() => {
+          setView('sign-up');
+          window.scrollTo({ top: 0 });
+        }}
+      />
+    );
+  }
+
+  if (view === 'sign-in' || view === 'sign-up') {
+    return (
+      <CloserAuthPage
+        mode={view === 'sign-in' ? 'in' : 'up'}
+        onChangeMode={(nextMode) =>
+          setView(nextMode === 'in' ? 'sign-in' : 'sign-up')
+        }
+        onBackToLanding={() => {
+          setView('landing');
+          window.scrollTo({ top: 0 });
+        }}
+        onAuthenticated={handleAuthenticated}
+      />
+    );
+  }
+
   return (
     <CrmProvider>
-      <CrmAppContent />
+      <CrmAppContent
+        googleUser={googleUser}
+        onReturnToLanding={handleReturnToLanding}
+      />
     </CrmProvider>
   );
 }

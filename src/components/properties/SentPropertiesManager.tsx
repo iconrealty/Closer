@@ -321,7 +321,7 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
   return (
     <div className="space-y-4">
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-olive-900 text-cream px-4 py-2.5 rounded-lg shadow-lg text-xs font-medium flex items-center gap-2">
+        <div className="fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-50 bg-olive-900 text-cream px-4 py-2.5 rounded-xl sm:rounded-lg shadow-lg text-sm sm:text-xs font-medium flex items-center gap-2">
           <Check className="w-4 h-4 text-olive-200" />
           <span>{toastMessage}</span>
         </div>
@@ -333,7 +333,7 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
           <h2 className="text-base font-semibold text-olive-900 tabular-nums">
             Properties to Show ({sentList.length})
           </h2>
-          <p className="text-xs text-tan-500 mt-0.5">
+          <p className="text-sm sm:text-xs text-tan-500 mt-0.5">
             Log properties sent to {client.firstName || client.name}, share links &amp; addresses, and open listings.
           </p>
         </div>
@@ -346,18 +346,18 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                 resetForm();
                 setIsAdding(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="flex-1 sm:flex-none min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3 sm:py-1.5 bg-olive-700 hover:bg-olive-800 text-cream rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               <span>Add Property</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={resetForm}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="flex-1 sm:flex-none min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3 sm:py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               <span>Cancel</span>
             </button>
           )}
@@ -366,10 +366,10 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
             <button
               type="button"
               onClick={handlePrintTour}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-cream hover:bg-tan-50 text-olive-900 border border-tan-200 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3 sm:py-1.5 bg-cream hover:bg-tan-50 text-olive-900 border border-tan-200 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer"
               title="Print property list"
             >
-              <Printer className="w-3.5 h-3.5 text-tan-500" />
+              <Printer className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-tan-500" />
               <span>Print</span>
             </button>
           )}
@@ -380,17 +380,17 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
       {isAdding && (
         <form
           onSubmit={handleSaveProperty}
-          className="bg-tan-50 border border-tan-300 rounded-xl p-4 sm:p-5 space-y-3.5"
+          className="bg-tan-50 border border-tan-300 rounded-xl p-4 sm:p-5 space-y-4 sm:space-y-3.5"
         >
           <div className="flex items-center justify-between pb-2.5 border-b border-tan-200">
-            <h3 className="text-xs font-semibold text-olive-900">
+            <h3 className="text-sm sm:text-xs font-semibold text-olive-900">
               {editingPropertyId ? 'Edit Property Log' : 'Log Property'}
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm sm:text-xs">
             <div>
-              <label className="block font-medium text-tan-600 mb-1">
+              <label className="block font-medium text-tan-600 mb-1 text-xs">
                 Address <span className="text-rust-600">*</span>
               </label>
               <input
@@ -399,12 +399,12 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                 placeholder="e.g. 42 Meadow Valley, Irvine, CA 92618"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full bg-cream border border-tan-300 rounded-lg px-3 py-2 text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3.5 py-2.5 sm:px-3 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
               />
             </div>
 
             <div>
-              <label className="block font-medium text-tan-600 mb-1">
+              <label className="block font-medium text-tan-600 mb-1 text-xs">
                 Property Link (Zillow / Redfin / OneHome)
               </label>
               <div className="relative">
@@ -413,11 +413,11 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                   placeholder="https://portal.onehome.com/..., Zillow, or Redfin link"
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
-                  className="w-full bg-cream border border-tan-300 rounded-lg px-3 py-2 text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700 pr-8"
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3.5 py-2.5 sm:px-3 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700 pr-10 sm:pr-8"
                 />
                 {isResolvingLink ? (
                   <Loader2
-                    className="w-3.5 h-3.5 text-olive-700 animate-spin absolute right-2.5 top-2.5"
+                    className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-olive-700 animate-spin absolute right-3 top-1/2 -translate-y-1/2"
                     aria-label="Looking up property details"
                   />
                 ) : (
@@ -426,35 +426,35 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="absolute right-2.5 top-2.5 text-olive-700 hover:text-olive-900"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-olive-700 hover:text-olive-900 p-1"
                       title="Open link"
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                     </a>
                   )
                 )}
               </div>
               {isResolvingLink && (
-                <p className="text-[11px] text-olive-700 mt-1">
+                <p className="text-xs sm:text-[11px] text-olive-700 mt-1">
                   Extracting address and price from OneHome link...
                 </p>
               )}
               {!isResolvingLink && linkErrorHint && (
-                <p className="text-[11px] text-tan-500 mt-1">
+                <p className="text-xs sm:text-[11px] text-tan-500 mt-1">
                   Could not extract property details from this link — enter address and price manually.
                 </p>
               )}
               {!isResolvingLink && !linkErrorHint && linkPriceHint && (
-                <p className="text-[11px] text-tan-500 mt-1">
+                <p className="text-xs sm:text-[11px] text-tan-500 mt-1">
                   This link doesn&apos;t include the price in its URL — enter Price below if needed.
                 </p>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm sm:text-xs">
             <div>
-              <label className="block font-medium text-tan-600 mb-1">Price ($)</label>
+              <label className="block font-medium text-tan-600 mb-1 text-xs">Price ($)</label>
               <input
                 type="text"
                 placeholder="e.g. 885,000"
@@ -463,16 +463,16 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                   setPrice(e.target.value);
                   if (e.target.value.trim()) setLinkPriceHint(false);
                 }}
-                className="w-full bg-cream border border-tan-300 rounded-lg px-3 py-2 text-xs text-olive-900 font-medium tabular-nums focus:outline-none focus:border-olive-700"
+                className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3.5 py-2.5 sm:px-3 sm:py-2 text-base sm:text-xs text-olive-900 font-medium tabular-nums focus:outline-none focus:border-olive-700"
               />
             </div>
 
             <div>
-              <label className="block font-medium text-tan-600 mb-1">Status</label>
+              <label className="block font-medium text-tan-600 mb-1 text-xs">Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as SentPropertyStatus)}
-                className="w-full bg-cream border border-tan-300 rounded-lg px-2.5 py-2 text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700"
+                className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3 py-2.5 sm:px-2.5 sm:py-2 text-base sm:text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700"
               >
                 <option value="to_show">To Show</option>
                 <option value="showing_scheduled">Showing Scheduled</option>
@@ -484,44 +484,44 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
             </div>
 
             <div>
-              <label className="block font-medium text-tan-600 mb-1">Tour Date</label>
+              <label className="block font-medium text-tan-600 mb-1 text-xs">Tour Date</label>
               <input
                 type="date"
                 value={showingDate}
                 onChange={(e) => setShowingDate(e.target.value)}
-                className="w-full bg-cream border border-tan-300 rounded-lg px-2.5 py-2 text-xs text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+                className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3 py-2.5 sm:px-2.5 sm:py-2 text-base sm:text-xs text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
               />
             </div>
 
             <div>
-              <label className="block font-medium text-tan-600 mb-1">Tour Time</label>
+              <label className="block font-medium text-tan-600 mb-1 text-xs">Tour Time</label>
               <input
                 type="text"
                 placeholder="e.g. 11:00 AM"
                 value={showingTime}
                 onChange={(e) => setShowingTime(e.target.value)}
-                className="w-full bg-cream border border-tan-300 rounded-lg px-2.5 py-2 text-xs text-olive-900 focus:outline-none focus:border-olive-700"
+                className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3 py-2.5 sm:px-2.5 sm:py-2 text-base sm:text-xs text-olive-900 focus:outline-none focus:border-olive-700"
               />
             </div>
           </div>
 
-          <div className="text-xs">
-            <label className="block font-medium text-tan-600 mb-1">Notes</label>
+          <div className="text-sm sm:text-xs">
+            <label className="block font-medium text-tan-600 mb-1 text-xs">Notes</label>
             <input
               type="text"
               placeholder="e.g. Sent via text, client liked the backyard..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-cream border border-tan-300 rounded-lg px-3 py-2 text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+              className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3.5 py-2.5 sm:px-3 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
             />
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-tan-200 flex-wrap gap-3">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between pt-3 border-t border-tan-200 gap-2.5 sm:gap-3">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 bg-cream hover:bg-tan-100 text-olive-900 border border-tan-300 rounded-lg text-xs font-medium cursor-pointer"
+                className="flex-1 sm:flex-none min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 bg-cream hover:bg-tan-100 text-olive-900 border border-tan-300 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium cursor-pointer"
               >
                 Cancel
               </button>
@@ -534,9 +534,9 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                     resetForm();
                     showToast('Property removed');
                   }}
-                  className="px-3.5 py-2 bg-rust-50 hover:bg-rust-200/40 text-rust-700 border border-rust-200 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5"
+                  className="flex-1 sm:flex-none min-h-[44px] sm:min-h-0 px-3.5 py-2.5 sm:py-2 bg-rust-50 hover:bg-rust-200/40 text-rust-700 border border-rust-200 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <Trash2 className="w-3.5 h-3.5 text-rust-600" />
+                  <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-rust-600" />
                   <span>Delete</span>
                 </button>
               )}
@@ -544,7 +544,7 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
 
             <button
               type="submit"
-              className="px-5 py-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="w-full sm:w-auto min-h-[46px] sm:min-h-0 px-5 py-2.5 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer"
             >
               {editingPropertyId ? 'Save Changes' : 'Save Property'}
             </button>
@@ -553,7 +553,7 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
       )}
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-1.5 border-b border-tan-200 pb-2.5 flex-wrap">
+      <div className="flex items-center gap-2 sm:gap-1.5 border-b border-tan-200 pb-3 sm:pb-2.5 overflow-x-auto no-scrollbar">
         {(
           [
             { id: 'all', label: 'All', count: sentList.length },
@@ -570,7 +570,7 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
             key={tab.id}
             type="button"
             onClick={() => setActiveFilter(tab.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+            className={`min-h-[40px] sm:min-h-0 px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               activeFilter === tab.id
                 ? 'bg-olive-700 text-cream'
                 : 'bg-cream hover:bg-tan-50 text-tan-600 border border-tan-200'
@@ -578,7 +578,7 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
           >
             <span>{tab.label}</span>
             <span
-              className={`text-[11px] tabular-nums ${
+              className={`text-xs sm:text-[11px] tabular-nums ${
                 activeFilter === tab.id ? 'text-tan-100' : 'text-tan-500'
               }`}
             >
@@ -594,8 +594,8 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
           <div className="w-10 h-10 rounded-xl bg-olive-50 text-olive-700 flex items-center justify-center mx-auto">
             <Home className="w-5 h-5" />
           </div>
-          <p className="text-sm font-semibold text-olive-900">No properties logged yet</p>
-          <p className="text-xs text-tan-500 max-w-sm mx-auto">
+          <p className="text-base sm:text-sm font-semibold text-olive-900">No properties logged yet</p>
+          <p className="text-sm sm:text-xs text-tan-500 max-w-sm mx-auto">
             Add an address and listing link to keep a log of homes sent to {client.firstName || client.name}.
           </p>
           {!isAdding && (
@@ -605,9 +605,9 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                 resetForm();
                 setIsAdding(true);
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-olive-700 hover:bg-olive-800 text-cream text-xs font-medium rounded-lg transition-colors cursor-pointer"
+              className="min-h-[44px] sm:min-h-0 inline-flex items-center gap-1.5 px-4 py-2.5 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream text-sm sm:text-xs font-medium rounded-xl sm:rounded-lg transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               <span>Add Property</span>
             </button>
           )}
@@ -625,28 +625,28 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
               >
                 {/* Header: Address, Price, Date Sent & Status */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-1">
+                  <div className="min-w-0 space-y-1.5 sm:space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm font-semibold text-olive-900 tracking-tight">
+                      <h3 className="text-base sm:text-sm font-semibold text-olive-900 tracking-tight">
                         {prop.address}
                       </h3>
                       {prop.price !== undefined && (
                         <>
                           <span className="text-tan-300" aria-hidden="true">·</span>
-                          <span className="text-sm font-semibold text-olive-700 tabular-nums">
+                          <span className="text-base sm:text-sm font-semibold text-olive-700 tabular-nums">
                             {formatCurrency(prop.price)}
                           </span>
                         </>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2.5 flex-wrap text-[11px] text-tan-500 tabular-nums">
+                    <div className="flex items-center gap-2.5 flex-wrap text-xs sm:text-[11px] text-tan-500 tabular-nums">
                       <span>Logged {formatDate(prop.sentAt)}</span>
                       {prop.showingDate && (
                         <>
                           <span aria-hidden="true">·</span>
                           <span className="inline-flex items-center gap-1 text-olive-700 font-medium">
-                            <Calendar className="w-3 h-3" />
+                            <Calendar className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                             <span>
                               Tour: {prop.showingDate} {prop.showingTime ? `at ${prop.showingTime}` : ''}
                             </span>
@@ -660,15 +660,15 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                         href={prop.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-olive-700 hover:text-olive-900 hover:underline break-all pt-0.5"
+                        className="inline-flex items-center gap-1.5 text-sm sm:text-xs text-olive-700 hover:text-olive-900 hover:underline break-all pt-0.5 max-w-full"
                       >
-                        <ExternalLink className="w-3 h-3 shrink-0" />
-                        <span className="truncate max-w-md">{prop.url}</span>
+                        <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3 shrink-0" />
+                        <span className="truncate max-w-[260px] sm:max-w-md">{prop.url}</span>
                       </a>
                     )}
 
                     {prop.notes && (
-                      <p className="text-xs text-tan-600 pt-0.5 leading-relaxed">{prop.notes}</p>
+                      <p className="text-sm sm:text-xs text-tan-600 pt-0.5 leading-relaxed">{prop.notes}</p>
                     )}
                   </div>
 
@@ -677,7 +677,7 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                     onChange={(e) =>
                       updateSentPropertyStatus(client.id, prop.id, e.target.value as SentPropertyStatus)
                     }
-                    className={`text-xs font-medium rounded-lg px-2.5 py-1 border transition-colors focus:outline-none cursor-pointer shrink-0 self-start ${statusBadge.classes}`}
+                    className={`w-full sm:w-auto min-h-[42px] sm:min-h-0 text-sm sm:text-xs font-medium rounded-xl sm:rounded-lg px-3 py-2 sm:px-2.5 sm:py-1 border transition-colors focus:outline-none cursor-pointer shrink-0 self-start ${statusBadge.classes}`}
                   >
                     <option value="to_show">To Show</option>
                     <option value="showing_scheduled">Showing Scheduled</option>
@@ -689,16 +689,16 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                 </div>
 
                 {/* Actions Footer */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-tan-100 flex-wrap gap-2 text-xs">
-                  <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 sm:pt-2.5 border-t border-tan-100 gap-2.5 sm:gap-2 text-sm sm:text-xs">
+                  <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:flex-wrap">
                     {prop.url && (
                       <a
                         href={prop.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-olive-700 hover:bg-olive-800 text-cream font-medium rounded-lg text-xs transition-colors"
+                        className="min-h-[42px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 bg-olive-700 hover:bg-olive-800 text-cream font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs transition-colors"
                       >
-                        <ExternalLink className="w-3.5 h-3.5" />
+                        <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                         <span>Open Listing</span>
                       </a>
                     )}
@@ -706,44 +706,44 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                     <button
                       type="button"
                       onClick={() => handleCopyAddressAndLink(prop)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 font-medium rounded-lg text-xs transition-colors cursor-pointer"
+                      className={`${prop.url ? '' : 'col-span-2'} min-h-[42px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs transition-colors cursor-pointer`}
                     >
-                      {isCopied ? <Check className="w-3.5 h-3.5 text-olive-700" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{isCopied ? 'Copied' : 'Copy Address & Link'}</span>
+                      {isCopied ? <Check className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-olive-700" /> : <Copy className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}
+                      <span className="truncate">{isCopied ? 'Copied' : 'Copy Address & Link'}</span>
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2 sm:gap-1.5">
                     <button
                       type="button"
                       onClick={() => handleSendToClient(prop, 'sms')}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-olive-50 hover:bg-olive-100 text-olive-800 border border-olive-200 font-medium rounded-lg text-xs transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-none min-h-[42px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 bg-olive-50 hover:bg-olive-100 text-olive-800 border border-olive-200 font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs transition-colors cursor-pointer"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 text-olive-700" />
+                      <MessageSquare className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-olive-700" />
                       <span>Text Client</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSendToClient(prop, 'email')}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 font-medium rounded-lg text-xs transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-none min-h-[42px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs transition-colors cursor-pointer"
                     >
-                      <Mail className="w-3.5 h-3.5 text-tan-600" />
+                      <Mail className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-tan-600" />
                       <span>Email</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => startEditProperty(prop)}
-                      className="p-1.5 text-tan-500 hover:text-olive-800 hover:bg-tan-100 rounded-lg transition-colors cursor-pointer ml-0.5"
+                      className="min-w-[42px] min-h-[42px] sm:min-w-0 sm:min-h-0 flex items-center justify-center p-2 sm:p-1.5 text-tan-500 hover:text-olive-800 hover:bg-tan-100 rounded-xl sm:rounded-lg transition-colors cursor-pointer ml-0.5 shrink-0"
                       title="Edit property"
                     >
-                      <Edit2 className="w-3.5 h-3.5" />
+                      <Edit2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                     </button>
 
                     {deletingPropId === prop.id ? (
-                      <div className="flex items-center gap-1.5 bg-rust-50 border border-rust-200 rounded-lg px-2 py-1">
-                        <span className="text-[11px] font-medium text-rust-700">Delete?</span>
+                      <div className="flex items-center gap-1.5 bg-rust-50 border border-rust-200 rounded-xl sm:rounded-lg px-2.5 py-1.5 sm:px-2 sm:py-1">
+                        <span className="text-xs sm:text-[11px] font-medium text-rust-700">Delete?</span>
                         <button
                           type="button"
                           onClick={() => {
@@ -751,14 +751,14 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                             setDeletingPropId(null);
                             showToast('Property removed');
                           }}
-                          className="px-2 py-0.5 bg-rust-600 hover:bg-rust-700 text-cream font-medium text-[11px] rounded cursor-pointer"
+                          className="min-h-[34px] sm:min-h-0 px-2.5 py-1 sm:px-2 sm:py-0.5 bg-rust-600 hover:bg-rust-700 text-cream font-medium text-xs sm:text-[11px] rounded cursor-pointer"
                         >
                           Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeletingPropId(null)}
-                          className="px-1.5 py-0.5 bg-cream hover:bg-tan-100 text-tan-600 text-[11px] font-medium rounded border border-tan-300 cursor-pointer"
+                          className="min-h-[34px] sm:min-h-0 px-2 py-1 sm:px-1.5 sm:py-0.5 bg-cream hover:bg-tan-100 text-tan-600 text-xs sm:text-[11px] font-medium rounded border border-tan-300 cursor-pointer"
                         >
                           No
                         </button>
@@ -767,10 +767,10 @@ export const SentPropertiesManager: React.FC<SentPropertiesManagerProps> = ({
                       <button
                         type="button"
                         onClick={() => setDeletingPropId(prop.id)}
-                        className="p-1.5 text-tan-500 hover:text-rust-600 hover:bg-rust-50 rounded-lg transition-colors cursor-pointer"
+                        className="min-w-[42px] min-h-[42px] sm:min-w-0 sm:min-h-0 flex items-center justify-center p-2 sm:p-1.5 text-tan-500 hover:text-rust-600 hover:bg-rust-50 rounded-xl sm:rounded-lg transition-colors cursor-pointer shrink-0"
                         title="Delete property"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                       </button>
                     )}
                   </div>

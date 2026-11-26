@@ -231,17 +231,17 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
     buildChatGptSearchUrl(buildCriteriaPayload(targetCity));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Top Banner / Notification */}
       {saveSuccessMsg && (
-        <div className="bg-olive-50 border border-olive-200 text-olive-900 px-4 py-2.5 rounded-lg flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-medium">
-            <CheckCircle2 className="w-4 h-4 text-olive-700" />
+        <div className="bg-olive-50 border border-olive-200 text-olive-900 px-4 py-3 sm:py-2.5 rounded-xl sm:rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm sm:text-xs font-medium">
+            <CheckCircle2 className="w-4 h-4 text-olive-700 shrink-0" />
             <span>{saveSuccessMsg}</span>
           </div>
           <button
             onClick={() => setSaveSuccessMsg(null)}
-            className="text-olive-700 hover:text-olive-900 text-xs font-semibold cursor-pointer"
+            className="text-olive-700 hover:text-olive-900 text-sm sm:text-xs font-semibold cursor-pointer p-1"
           >
             ✕
           </button>
@@ -249,9 +249,9 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
       )}
 
       {/* THE REASON FOR THEIR MOVE */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-5 space-y-2.5">
+      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-2.5">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-olive-900">
+          <h3 className="text-base sm:text-sm font-semibold text-olive-900">
             The Reason for their move
           </h3>
           {hasUnsavedChanges && (
@@ -261,51 +261,51 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
           )}
         </div>
         <textarea
-          rows={2}
+          rows={3}
           value={reasonForMove}
           onChange={(e) => {
             markDirty();
             setReasonForMove(e.target.value);
           }}
           placeholder="Why are they moving? (e.g. Outgrowing current home, closer to schools or family, relocating for work...)"
-          className="w-full bg-tan-50/70 border border-tan-200 rounded-lg px-3 py-2 text-xs text-olive-900 placeholder:text-tan-400 leading-relaxed focus:outline-none focus:border-olive-700"
+          className="w-full bg-tan-50/70 border border-tan-200 rounded-xl sm:rounded-lg px-3.5 py-2.5 sm:px-3 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 leading-relaxed focus:outline-none focus:border-olive-700"
         />
       </div>
 
       {/* SECTION 1: TARGET BUDGET & PRICE RANGE */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-5 space-y-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap pb-3 border-b border-tan-200">
+      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 pb-3 border-b border-tan-200">
           <div>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-olive-50 text-olive-700 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-olive-50 text-olive-700 flex items-center justify-center shrink-0">
                 <DollarSign className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-semibold text-olive-900">
-                1. Target Budget & Price Range
+              <h3 className="text-base sm:text-sm font-semibold text-olive-900">
+                1. Target Budget &amp; Price Range
               </h3>
             </div>
-            <p className="text-xs text-tan-500 mt-1">
+            <p className="text-sm sm:text-xs text-tan-500 mt-1">
               Select desired price range using presets or the slider.
             </p>
           </div>
 
-          <div className="text-right">
-            <span className="text-[11px] font-medium text-tan-500 block">
+          <div className="sm:text-right bg-tan-50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-tan-200 sm:border-0">
+            <span className="text-xs sm:text-[11px] font-medium text-tan-500 block">
               Active Budget Range
             </span>
-            <span className="text-base font-semibold text-olive-800 tabular-nums block">
+            <span className="text-lg sm:text-base font-semibold text-olive-800 tabular-nums block">
               {formatPriceRange(minPrice, maxPrice)}
             </span>
-            <span className="text-[11px] text-olive-700 font-medium tabular-nums block">
+            <span className="text-xs sm:text-[11px] text-olive-700 font-medium tabular-nums block">
               Est. 2%: ~{formatCurrency(((minPrice + maxPrice) / 2) * 0.02)}
             </span>
           </div>
         </div>
 
         {/* Presets */}
-        <div className="space-y-1.5">
-          <span className="text-xs font-medium text-olive-900">Price Presets</span>
-          <div className="flex flex-wrap gap-2">
+        <div className="space-y-2 sm:space-y-1.5">
+          <span className="text-sm sm:text-xs font-medium text-olive-900 block">Price Presets</span>
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
             {PRICE_PRESETS.map((preset) => {
               const isSelected = minPrice === preset.min && maxPrice === preset.max;
               return (
@@ -313,7 +313,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                   key={preset.label}
                   type="button"
                   onClick={() => handleSelectPreset(preset.min, preset.max)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium tabular-nums transition-colors border cursor-pointer select-none ${
+                  className={`min-h-[42px] sm:min-h-0 px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium tabular-nums transition-colors border cursor-pointer select-none ${
                     isSelected
                       ? 'bg-olive-700 text-cream border-olive-800'
                       : 'bg-cream hover:bg-tan-50 text-olive-900 border-tan-300 hover:border-tan-400'
@@ -342,19 +342,19 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
       </div>
 
       {/* SECTION 2: TYPE OF PROPERTY */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-5 space-y-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap pb-3 border-b border-tan-200">
+      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-4">
+        <div className="flex items-start justify-between gap-3 sm:gap-4 flex-wrap pb-3 border-b border-tan-200">
           <div>
-            <h3 className="text-sm font-semibold text-olive-900">
+            <h3 className="text-base sm:text-sm font-semibold text-olive-900">
               2. Type of Property
             </h3>
-            <p className="text-xs text-tan-500 mt-1">
+            <p className="text-sm sm:text-xs text-tan-500 mt-1">
               Select property types the client is looking for.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-tan-600 tabular-nums">
+          <div className="flex items-center gap-2.5 sm:gap-2">
+            <span className="text-sm sm:text-xs font-medium text-tan-600 tabular-nums">
               {selectedPropTypes.length} selected
             </span>
             <span className="text-tan-300">·</span>
@@ -364,7 +364,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                 markDirty();
                 setSelectedPropTypes(AVAILABLE_PROPERTY_TYPES.map((t) => t.id));
               }}
-              className="text-xs text-olive-700 hover:text-olive-900 font-medium cursor-pointer"
+              className="text-sm sm:text-xs text-olive-700 hover:text-olive-900 font-medium cursor-pointer py-1"
             >
               Select All
             </button>
@@ -375,38 +375,38 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                 markDirty();
                 setSelectedPropTypes(['Single Family']);
               }}
-              className="text-xs text-tan-500 hover:text-olive-900 font-medium cursor-pointer"
+              className="text-sm sm:text-xs text-tan-500 hover:text-olive-900 font-medium cursor-pointer py-1"
             >
               Reset
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
           {AVAILABLE_PROPERTY_TYPES.map((type) => {
             const isSelected = selectedPropTypes.includes(type.id);
             return (
               <div
                 key={type.id}
                 onClick={() => handleTogglePropType(type.id)}
-                className={`px-3.5 py-2.5 rounded-lg border transition-colors cursor-pointer select-none flex items-center justify-between gap-2 ${
+                className={`min-h-[46px] sm:min-h-0 px-3.5 py-3 sm:py-2.5 rounded-xl sm:rounded-lg border transition-colors cursor-pointer select-none flex items-center justify-between gap-2 ${
                   isSelected
                     ? 'border-olive-700 bg-olive-50'
                     : 'border-tan-300 bg-cream hover:border-tan-400 hover:bg-tan-50'
                 }`}
               >
-                <span className={`text-xs font-medium ${isSelected ? 'text-olive-900' : 'text-olive-900'}`}>
+                <span className="text-sm sm:text-xs font-medium text-olive-900">
                   {type.label}
                 </span>
 
                 <div
-                  className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 transition-colors ${
+                  className={`w-5 h-5 sm:w-4 sm:h-4 rounded flex items-center justify-center border shrink-0 transition-colors ${
                     isSelected
                       ? 'bg-olive-700 border-olive-700 text-cream'
                       : 'border-tan-400 bg-cream'
                   }`}
                 >
-                  {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 sm:w-3 sm:h-3 stroke-[2.5]" />}
                 </div>
               </div>
             );
@@ -415,36 +415,36 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
       </div>
 
       {/* SECTION 3: CITIES & LOCATIONS */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-5 space-y-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap pb-3 border-b border-tan-200">
+      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-4">
+        <div className="flex items-start justify-between gap-3 sm:gap-4 flex-wrap pb-3 border-b border-tan-200">
           <div>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-olive-50 text-olive-700 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-olive-50 text-olive-700 flex items-center justify-center shrink-0">
                 <MapPin className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-semibold text-olive-900">
-                3. Cities & Preferred Markets
+              <h3 className="text-base sm:text-sm font-semibold text-olive-900">
+                3. Cities &amp; Preferred Markets
               </h3>
             </div>
-            <p className="text-xs text-tan-500 mt-1">
-              Click the star to set the primary city, or click Zillow on any city to search listings directly.
+            <p className="text-sm sm:text-xs text-tan-500 mt-1">
+              Tap the star to set the primary city, or tap Zillow on any city to search listings directly.
             </p>
           </div>
 
-          <div className="text-xs text-tan-600">
+          <div className="text-sm sm:text-xs text-tan-600">
             Primary City: <strong className="text-olive-900 font-semibold">{primaryLoc || 'Irvine'}</strong>
           </div>
         </div>
 
         {/* Selected Locations */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-olive-900">
+          <label className="block text-sm sm:text-xs font-medium text-olive-900">
             Selected Cities ({locations.length})
           </label>
-          <div className="flex flex-wrap gap-2 min-h-[42px] p-2.5 bg-tan-50 border border-tan-200 rounded-lg">
+          <div className="flex flex-wrap gap-2 min-h-[48px] p-3 sm:p-2.5 bg-tan-50 border border-tan-200 rounded-xl sm:rounded-lg">
             {locations.length === 0 ? (
-              <span className="text-xs text-tan-500 py-1">
-                No cities selected (Click a city below to add)
+              <span className="text-sm sm:text-xs text-tan-500 py-1">
+                No cities selected (Tap a city below to add)
               </span>
             ) : (
               locations.map((city) => {
@@ -452,7 +452,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                 return (
                   <div
                     key={city}
-                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    className={`inline-flex items-center gap-2 px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium border transition-colors ${
                       isPrimary
                         ? 'bg-olive-700 text-cream border-olive-800'
                         : 'bg-cream text-olive-900 border-tan-300 hover:border-tan-400'
@@ -462,40 +462,40 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                       type="button"
                       onClick={() => handleSetPrimaryCity(city)}
                       title={isPrimary ? 'Primary search city' : 'Click to make primary city'}
-                      className={`p-0.5 rounded hover:bg-black/10 transition-colors cursor-pointer ${
+                      className={`p-1 sm:p-0.5 rounded hover:bg-black/10 transition-colors cursor-pointer ${
                         isPrimary ? 'text-tan-100' : 'text-tan-400 hover:text-olive-700'
                       }`}
                     >
-                      <Star className={`w-3.5 h-3.5 ${isPrimary ? 'fill-tan-100' : ''}`} />
+                      <Star className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${isPrimary ? 'fill-tan-100' : ''}`} />
                     </button>
                     <span>{city}</span>
                     {isPrimary && (
-                      <span className="text-[10px] text-tan-100 font-medium">
+                      <span className="text-xs sm:text-[10px] text-tan-100 font-medium">
                         (Primary)
                       </span>
                     )}
                     <button
                       type="button"
                       onClick={() => handleOpenZillowSearch(city)}
-                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                      className={`inline-flex items-center gap-1 px-2 py-1 sm:px-1.5 sm:py-0.5 rounded-md sm:rounded text-xs sm:text-[11px] font-medium transition-colors cursor-pointer ${
                         isPrimary
                           ? 'bg-olive-800 hover:bg-olive-900 text-cream'
                           : 'bg-olive-50 hover:bg-olive-100 text-olive-800 border border-olive-200'
                       }`}
                       title={`Search Zillow listings in ${city}`}
                     >
-                      <Search className="w-2.5 h-2.5" />
+                      <Search className="w-3 h-3 sm:w-2.5 sm:h-2.5" />
                       <span>Zillow</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleRemoveCity(city)}
-                      className={`p-0.5 rounded hover:bg-black/10 transition-colors cursor-pointer ${
+                      className={`p-1 sm:p-0.5 rounded hover:bg-black/10 transition-colors cursor-pointer ${
                         isPrimary ? 'text-tan-200 hover:text-cream' : 'text-tan-500 hover:text-rust-600'
                       }`}
                       title={`Remove ${city}`}
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                     </button>
                   </div>
                 );
@@ -505,8 +505,8 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
         </div>
 
         {/* Popular Orange County Cities */}
-        <div className="space-y-1.5 pt-1">
-          <span className="text-xs font-medium text-tan-600 block">
+        <div className="space-y-2 sm:space-y-1.5 pt-1">
+          <span className="text-sm sm:text-xs font-medium text-tan-600 block">
             Popular Cities
           </span>
           <div className="flex flex-wrap gap-2">
@@ -523,7 +523,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                       handleAddCity(city);
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border cursor-pointer select-none ${
+                  className={`min-h-[40px] sm:min-h-0 px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors border cursor-pointer select-none ${
                     isAlreadyAdded
                       ? 'bg-olive-50 text-olive-900 border-olive-200 font-semibold'
                       : 'bg-cream hover:bg-tan-50 text-olive-900 border-tan-300 hover:border-tan-400'
@@ -537,7 +537,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
         </div>
 
         {/* Custom City / Zip Input */}
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
           <input
             type="text"
             placeholder="Add another city or zip code..."
@@ -549,32 +549,32 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                 handleAddCity(newCityInput);
               }
             }}
-            className="flex-1 bg-cream border border-tan-300 rounded-lg px-3 py-2 text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+            className="flex-1 min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3.5 py-2.5 sm:px-3 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
           />
           <button
             type="button"
             onClick={() => handleAddCity(newCityInput)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-xs font-medium transition-colors cursor-pointer"
+            className="min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3.5 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer shrink-0"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             <span>Add City</span>
           </button>
         </div>
       </div>
 
       {/* SECTION 4: BEDROOMS, BATHROOMS, SQFT & STORIES */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-5 space-y-4">
+      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-4">
         <div className="flex items-start justify-between gap-4 flex-wrap pb-3 border-b border-tan-200">
           <div>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-olive-50 text-olive-700 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-olive-50 text-olive-700 flex items-center justify-center shrink-0">
                 <SlidersHorizontal className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-semibold text-olive-900">
-                4. Bed, Bath, Sqft & Stories
+              <h3 className="text-base sm:text-sm font-semibold text-olive-900">
+                4. Bed, Bath, Sqft &amp; Stories
               </h3>
             </div>
-            <p className="text-xs text-tan-500 mt-1">
+            <p className="text-sm sm:text-xs text-tan-500 mt-1">
               Minimum bedrooms, bathrooms, square footage, and stories preference.
             </p>
           </div>
@@ -583,8 +583,8 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {/* Bedrooms */}
           <div>
-            <label className="text-xs font-medium text-olive-900 mb-1.5 flex items-center gap-1.5">
-              <Bed className="w-3.5 h-3.5 text-olive-700" />
+            <label className="text-sm sm:text-xs font-medium text-olive-900 mb-2 sm:mb-1.5 flex items-center gap-1.5">
+              <Bed className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-olive-700" />
               <span>Bedrooms</span>
             </label>
             <div className="grid grid-cols-5 gap-1.5">
@@ -596,7 +596,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                     markDirty();
                     setBedsMin(count);
                   }}
-                  className={`py-2 rounded-lg text-xs font-medium tabular-nums transition-colors border cursor-pointer ${
+                  className={`min-h-[44px] sm:min-h-0 py-2.5 sm:py-2 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium tabular-nums transition-colors border cursor-pointer ${
                     bedsMin === count
                       ? 'bg-olive-700 text-cream border-olive-800'
                       : 'bg-cream hover:bg-tan-50 text-olive-900 border-tan-300'
@@ -610,8 +610,8 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
 
           {/* Bathrooms */}
           <div>
-            <label className="text-xs font-medium text-olive-900 mb-1.5 flex items-center gap-1.5">
-              <Bath className="w-3.5 h-3.5 text-olive-700" />
+            <label className="text-sm sm:text-xs font-medium text-olive-900 mb-2 sm:mb-1.5 flex items-center gap-1.5">
+              <Bath className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-olive-700" />
               <span>Bathrooms</span>
             </label>
             <div className="grid grid-cols-4 gap-1.5">
@@ -623,7 +623,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                     markDirty();
                     setBathsMin(count);
                   }}
-                  className={`py-2 rounded-lg text-xs font-medium tabular-nums transition-colors border cursor-pointer ${
+                  className={`min-h-[44px] sm:min-h-0 py-2.5 sm:py-2 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium tabular-nums transition-colors border cursor-pointer ${
                     bathsMin === count
                       ? 'bg-olive-700 text-cream border-olive-800'
                       : 'bg-cream hover:bg-tan-50 text-olive-900 border-tan-300'
@@ -637,7 +637,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
 
           {/* Min Sqft */}
           <div>
-            <label className="block text-xs font-medium text-olive-900 mb-1.5">
+            <label className="block text-sm sm:text-xs font-medium text-olive-900 mb-2 sm:mb-1.5">
               Min Sqft
             </label>
             <div className="relative">
@@ -650,9 +650,9 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                   markDirty();
                   setMinSqft(Number(e.target.value));
                 }}
-                className="w-full bg-cream border border-tan-300 rounded-lg px-3 py-2 text-xs font-medium tabular-nums text-olive-900 focus:outline-none focus:border-olive-700"
+                className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3.5 py-2.5 sm:px-3 sm:py-2 pr-12 text-base sm:text-xs font-medium tabular-nums text-olive-900 focus:outline-none focus:border-olive-700"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-tan-500 text-xs">
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-tan-500 text-sm sm:text-xs">
                 sqft
               </span>
             </div>
@@ -660,7 +660,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
 
           {/* Stories */}
           <div>
-            <label className="block text-xs font-medium text-olive-900 mb-1.5">
+            <label className="block text-sm sm:text-xs font-medium text-olive-900 mb-2 sm:mb-1.5">
               Stories
             </label>
             <select
@@ -669,7 +669,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                 markDirty();
                 setStories(e.target.value);
               }}
-              className="w-full bg-cream border border-tan-300 rounded-lg px-2.5 py-2 text-xs font-medium text-olive-900 focus:outline-none focus:border-olive-700 cursor-pointer"
+              className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg px-3 py-2.5 sm:px-2.5 sm:py-2 text-base sm:text-xs font-medium text-olive-900 focus:outline-none focus:border-olive-700 cursor-pointer"
             >
               <option value="Any">Any Stories</option>
               <option value="1-Story">1-Story (Single Level)</option>
@@ -681,9 +681,9 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
       </div>
 
       {/* BOTTOM ACTION BAR */}
-      <div className="p-4 bg-tan-50 border border-tan-200 rounded-xl flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-2 text-xs font-medium text-tan-600">
-          <CheckCircle2 className="w-4 h-4 text-olive-700" />
+      <div className="p-4 bg-tan-50 border border-tan-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 text-sm sm:text-xs font-medium text-tan-600">
+          <CheckCircle2 className="w-4 h-4 text-olive-700 shrink-0" />
           <span>
             {hasUnsavedChanges
               ? 'You have unsaved changes to this client’s criteria.'
@@ -691,35 +691,35 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-2 w-full sm:w-auto">
           <a
             href={getZillowSearchHref()}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-olive-700 hover:bg-olive-800 text-cream font-medium rounded-lg text-xs transition-colors cursor-pointer group"
+            className="min-h-[46px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3.5 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs transition-colors cursor-pointer group"
           >
-            <Search className="w-3.5 h-3.5" />
+            <Search className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             <span>Search Zillow in {primaryLoc}</span>
-            <ExternalLink className="w-3 h-3 opacity-80 group-hover:opacity-100" />
+            <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3 opacity-80 group-hover:opacity-100" />
           </a>
 
           <a
             href={getChatGptSearchHref()}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-2 bg-cream hover:bg-tan-100 text-olive-900 font-medium rounded-lg text-xs border border-tan-200 transition-colors cursor-pointer group"
+            className="min-h-[46px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3 sm:py-2 bg-cream hover:bg-tan-100 text-olive-900 font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs border border-tan-200 transition-colors cursor-pointer group"
           >
-            <Search className="w-3.5 h-3.5 text-tan-500" />
+            <Search className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-tan-500" />
             <span>Search {primaryLoc} in ChatGPT</span>
-            <ExternalLink className="w-3 h-3 text-tan-400 group-hover:text-olive-900" />
+            <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-tan-400 group-hover:text-olive-900" />
           </a>
 
           <button
             type="button"
             onClick={handleSaveCriteria}
-            className="flex items-center gap-1.5 px-4 py-2 bg-olive-900 hover:bg-olive-800 text-cream rounded-lg text-xs font-medium transition-colors cursor-pointer"
+            className="min-h-[46px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 bg-olive-900 hover:bg-olive-800 text-cream rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer"
           >
-            <Save className="w-3.5 h-3.5" />
+            <Save className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             <span>Save Search Criteria</span>
           </button>
         </div>

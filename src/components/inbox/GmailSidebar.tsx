@@ -89,12 +89,15 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
   const navItemClass = (isActive: boolean) =>
     `w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors cursor-pointer ${
       isActive
-        ? 'bg-olive-50 text-olive-900 font-semibold'
-        : 'text-tan-600 hover:text-olive-900 hover:bg-tan-50'
+        ? 'bg-white/12 text-cream font-semibold'
+        : 'text-olive-100/85 hover:text-cream hover:bg-white/8'
     }`;
 
+  const iconClass = (isActive: boolean) =>
+    `w-4 h-4 ${isActive ? 'text-amber-200' : 'text-olive-200/75'}`;
+
   return (
-    <aside className="w-60 bg-cream border-r border-tan-200 flex flex-col h-[calc(100vh-3rem)] select-none shrink-0 overflow-y-auto">
+    <aside className="w-60 bg-olive-800 text-olive-100 border-r border-olive-900 flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-3rem)] select-none shrink-0 overflow-y-auto">
       {/* 1. Minimal Compose Button */}
       <div className="p-3">
         <button
@@ -103,7 +106,7 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
             setIsAddModalOpen(true);
             if (onCloseMobile) onCloseMobile();
           }}
-          className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 bg-amber-50 hover:bg-cream text-olive-900 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[2]" />
           <span>Add Lead</span>
@@ -118,10 +121,10 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'dashboard')}
         >
           <div className="flex items-center gap-2.5">
-            <LayoutGrid className={`w-4 h-4 ${selectedFolder === 'dashboard' ? 'text-olive-700' : 'text-tan-500'}`} />
+            <LayoutGrid className={iconClass(selectedFolder === 'dashboard')} />
             <span>Dashboard</span>
           </div>
-          <span className="text-[11px] tabular-nums text-tan-500">{clients.length}</span>
+          <span className="text-[11px] tabular-nums text-olive-200/75">{clients.length}</span>
         </button>
 
         <button
@@ -130,11 +133,11 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'follow_through')}
         >
           <div className="flex items-center gap-2.5">
-            <CheckCircle2 className={`w-4 h-4 ${selectedFolder === 'follow_through' ? 'text-olive-700' : 'text-tan-500'}`} />
+            <CheckCircle2 className={iconClass(selectedFolder === 'follow_through')} />
             <span>Follow-Through</span>
           </div>
           {(overdueCount + dueTodayCount + newLeadsCount) > 0 && (
-            <span className="text-[11px] tabular-nums text-olive-800 font-semibold">
+            <span className="text-[11px] tabular-nums text-amber-200 font-semibold">
               {overdueCount + dueTodayCount + newLeadsCount}
             </span>
           )}
@@ -146,12 +149,12 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'little_moments')}
         >
           <div className="flex items-center gap-2.5">
-            <MessageCircle className={`w-4 h-4 ${selectedFolder === 'little_moments' ? 'text-olive-700' : 'text-tan-500'}`} />
+            <MessageCircle className={iconClass(selectedFolder === 'little_moments')} />
             <span>Little Moments</span>
           </div>
         </button>
 
-        <div className="my-1.5 border-t border-tan-200" />
+        <div className="my-1.5 border-t border-white/12" />
 
         {/* All inboxes */}
         <button
@@ -160,10 +163,10 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'all_inbox')}
         >
           <div className="flex items-center gap-2.5">
-            <Layers className={`w-4 h-4 ${selectedFolder === 'all_inbox' ? 'text-olive-700' : 'text-tan-500'}`} />
+            <Layers className={iconClass(selectedFolder === 'all_inbox')} />
             <span>All inboxes</span>
           </div>
-          <span className="text-[11px] tabular-nums text-tan-500">{allActiveCount}</span>
+          <span className="text-[11px] tabular-nums text-olive-200/75">{allActiveCount}</span>
         </button>
 
         {/* Overdue */}
@@ -173,11 +176,11 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'overdue')}
         >
           <div className="flex items-center gap-2.5">
-            <AlertCircle className={`w-4 h-4 ${overdueCount > 0 ? 'text-rust-600' : 'text-tan-400'}`} />
+            <AlertCircle className={`w-4 h-4 ${overdueCount > 0 ? 'text-rust-200' : 'text-olive-200/65'}`} />
             <span>Catch Up (Overdue)</span>
           </div>
           {overdueCount > 0 && (
-            <span className="text-[11px] tabular-nums font-semibold text-rust-600">
+            <span className="text-[11px] tabular-nums font-semibold text-rust-200">
               {overdueCount}
             </span>
           )}
@@ -190,11 +193,11 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'today')}
         >
           <div className="flex items-center gap-2.5">
-            <Clock className={`w-4 h-4 ${dueTodayCount > 0 ? 'text-olive-700' : 'text-tan-400'}`} />
+            <Clock className={`w-4 h-4 ${dueTodayCount > 0 ? 'text-amber-200' : 'text-olive-200/65'}`} />
             <span>Due Today</span>
           </div>
           {dueTodayCount > 0 && (
-            <span className="text-[11px] tabular-nums font-semibold text-olive-900">
+            <span className="text-[11px] tabular-nums font-semibold text-amber-200">
               {dueTodayCount}
             </span>
           )}
@@ -207,11 +210,11 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'active_showing')}
         >
           <div className="flex items-center gap-2.5">
-            <Home className={`w-4 h-4 ${selectedFolder === 'active_showing' ? 'text-olive-700' : 'text-tan-400'}`} />
+            <Home className={iconClass(selectedFolder === 'active_showing')} />
             <span>Active Showings</span>
           </div>
           {activeShowingCount > 0 && (
-            <span className="text-[11px] tabular-nums text-tan-500">{activeShowingCount}</span>
+            <span className="text-[11px] tabular-nums text-olive-200/75">{activeShowingCount}</span>
           )}
         </button>
 
@@ -222,11 +225,11 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'under_contract')}
         >
           <div className="flex items-center gap-2.5">
-            <FileText className={`w-4 h-4 ${selectedFolder === 'under_contract' ? 'text-olive-700' : 'text-tan-400'}`} />
+            <FileText className={iconClass(selectedFolder === 'under_contract')} />
             <span>Under Contract</span>
           </div>
           {underContractCount > 0 && (
-            <span className="text-[11px] tabular-nums text-tan-500">{underContractCount}</span>
+            <span className="text-[11px] tabular-nums text-olive-200/75">{underContractCount}</span>
           )}
         </button>
 
@@ -237,11 +240,11 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'new_lead')}
         >
           <div className="flex items-center gap-2.5">
-            <Inbox className={`w-4 h-4 ${selectedFolder === 'new_lead' ? 'text-olive-700' : 'text-tan-400'}`} />
+            <Inbox className={iconClass(selectedFolder === 'new_lead')} />
             <span>New Leads</span>
           </div>
           {newLeadsCount > 0 && (
-            <span className="text-[11px] tabular-nums text-tan-500">{newLeadsCount}</span>
+            <span className="text-[11px] tabular-nums text-olive-200/75">{newLeadsCount}</span>
           )}
         </button>
 
@@ -252,20 +255,20 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'closed')}
         >
           <div className="flex items-center gap-2.5">
-            <Archive className={`w-4 h-4 ${selectedFolder === 'closed' ? 'text-olive-700' : 'text-tan-400'}`} />
+            <Archive className={iconClass(selectedFolder === 'closed')} />
             <span>Closed Deals</span>
           </div>
           {closedCount > 0 && (
-            <span className="text-[11px] tabular-nums text-tan-500">{closedCount}</span>
+            <span className="text-[11px] tabular-nums text-olive-200/75">{closedCount}</span>
           )}
         </button>
       </div>
 
-      <div className="my-2 border-t border-tan-200" />
+      <div className="my-2 border-t border-white/12" />
 
       {/* 3. Relevant Information */}
       <div className="px-2 py-1">
-        <div className="px-3 py-1 text-[10px] font-semibold tracking-wider text-tan-500 uppercase">
+        <div className="px-3 py-1 text-[10px] font-semibold tracking-wider text-olive-200/65 uppercase">
           Views
         </div>
 
@@ -275,10 +278,10 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'all_contacts')}
         >
           <div className="flex items-center gap-2.5">
-            <Users className={`w-4 h-4 ${selectedFolder === 'all_contacts' ? 'text-olive-700' : 'text-tan-400'}`} />
+            <Users className={iconClass(selectedFolder === 'all_contacts')} />
             <span>All Contacts</span>
           </div>
-          <span className="text-[11px] tabular-nums text-tan-500">{clients.length}</span>
+          <span className="text-[11px] tabular-nums text-olive-200/75">{clients.length}</span>
         </button>
 
         <button
@@ -287,11 +290,11 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'properties_to_show')}
         >
           <div className="flex items-center gap-2.5">
-            <Home className={`w-4 h-4 ${selectedFolder === 'properties_to_show' ? 'text-olive-700' : 'text-tan-400'}`} />
+            <Home className={iconClass(selectedFolder === 'properties_to_show')} />
             <span>Properties to Show</span>
           </div>
           {totalPropertiesToShow > 0 && (
-            <span className="text-[11px] tabular-nums text-tan-500">{totalPropertiesToShow}</span>
+            <span className="text-[11px] tabular-nums text-olive-200/75">{totalPropertiesToShow}</span>
           )}
         </button>
 
@@ -301,7 +304,7 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'pipeline_board')}
         >
           <div className="flex items-center gap-2.5">
-            <Kanban className={`w-4 h-4 ${selectedFolder === 'pipeline_board' ? 'text-olive-700' : 'text-tan-400'}`} />
+            <Kanban className={iconClass(selectedFolder === 'pipeline_board')} />
             <span>Pipeline Board</span>
           </div>
         </button>
@@ -312,17 +315,17 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           className={navItemClass(selectedFolder === 'scripts')}
         >
           <div className="flex items-center gap-2.5">
-            <FileText className={`w-4 h-4 ${selectedFolder === 'scripts' ? 'text-olive-700' : 'text-tan-400'}`} />
+            <FileText className={iconClass(selectedFolder === 'scripts')} />
             <span>Scripts</span>
           </div>
         </button>
       </div>
 
-      <div className="my-2 border-t border-tan-200" />
+      <div className="my-2 border-t border-white/12" />
 
       {/* 4. Filter Tags */}
       <div className="px-2 py-1 flex-1">
-        <div className="px-3 py-1 text-[10px] font-semibold tracking-wider text-tan-500 uppercase">
+        <div className="px-3 py-1 text-[10px] font-semibold tracking-wider text-olive-200/65 uppercase">
           Filters
         </div>
 
@@ -331,15 +334,15 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           onClick={() => onSelectPriorityFilter(selectedPriorityFilter === 'hot' ? 'all' : 'hot')}
           className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
             selectedPriorityFilter === 'hot'
-              ? 'bg-olive-50 text-olive-900 font-semibold'
-              : 'text-tan-600 hover:text-olive-900 hover:bg-tan-50'
+              ? 'bg-white/12 text-cream font-semibold'
+              : 'text-olive-100/85 hover:text-cream hover:bg-white/8'
           }`}
         >
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-olive-700" />
+            <span className="w-2 h-2 rounded-full bg-amber-200" />
             <span>Hot Priority</span>
           </div>
-          <span className="text-[10px] tabular-nums text-tan-500">{hotCount}</span>
+          <span className="text-[10px] tabular-nums text-olive-200/75">{hotCount}</span>
         </button>
 
         <button
@@ -347,15 +350,15 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           onClick={() => onSelectPriorityFilter(selectedPriorityFilter === 'warm' ? 'all' : 'warm')}
           className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
             selectedPriorityFilter === 'warm'
-              ? 'bg-olive-50 text-olive-900 font-semibold'
-              : 'text-tan-600 hover:text-olive-900 hover:bg-tan-50'
+              ? 'bg-white/12 text-cream font-semibold'
+              : 'text-olive-100/85 hover:text-cream hover:bg-white/8'
           }`}
         >
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-tan-400" />
+            <span className="w-2 h-2 rounded-full bg-olive-200/75" />
             <span>Warm Priority</span>
           </div>
-          <span className="text-[10px] tabular-nums text-tan-500">{warmCount}</span>
+          <span className="text-[10px] tabular-nums text-olive-200/75">{warmCount}</span>
         </button>
 
         <div className="pt-2 px-3 flex items-center gap-1.5">
@@ -366,8 +369,8 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
               onClick={() => onSelectTypeFilter(type)}
               className={`px-2 py-0.5 rounded text-[10px] font-medium capitalize transition-colors cursor-pointer ${
                 selectedTypeFilter === type
-                  ? 'bg-olive-700 text-cream'
-                  : 'text-tan-600 hover:bg-tan-100 hover:text-olive-900'
+                  ? 'bg-amber-50 text-olive-900 font-semibold'
+                  : 'text-olive-200/80 hover:bg-white/10 hover:text-cream'
               }`}
             >
               {type}

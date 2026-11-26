@@ -87,30 +87,30 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({ onOpenClient, onOp
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-3.5 sm:px-6 py-5 sm:py-6 space-y-5 sm:space-y-6">
       {/* Title & Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-olive-900">Client Directory</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-olive-900">Client Directory</h1>
           <p className="text-sm text-tan-600 mt-1 tabular-nums">
             {sorted.length} total client{sorted.length === 1 ? '' : 's'} in book of business
           </p>
         </div>
 
         {/* Filter Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 p-1 bg-tan-100 border border-tan-200 rounded-lg text-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-2">
+          <div className="grid grid-cols-4 sm:flex items-center gap-1 p-1 bg-tan-100 border border-tan-200 rounded-xl sm:rounded-lg text-sm sm:text-xs">
             <button
               onClick={() => setTypeFilter('all')}
-              className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap cursor-pointer ${
+              className={`min-h-[40px] sm:min-h-0 px-2.5 py-1.5 sm:py-1 rounded-lg sm:rounded transition-colors whitespace-nowrap cursor-pointer ${
                 typeFilter === 'all' ? 'bg-cream text-olive-900 font-semibold shadow-2xs' : 'text-tan-600 hover:text-olive-900'
               }`}
             >
-              All Types
+              All
             </button>
             <button
               onClick={() => setTypeFilter('buyer')}
-              className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap cursor-pointer ${
+              className={`min-h-[40px] sm:min-h-0 px-2.5 py-1.5 sm:py-1 rounded-lg sm:rounded transition-colors whitespace-nowrap cursor-pointer ${
                 typeFilter === 'buyer' ? 'bg-cream text-olive-900 font-semibold shadow-2xs' : 'text-tan-600 hover:text-olive-900'
               }`}
             >
@@ -118,7 +118,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({ onOpenClient, onOp
             </button>
             <button
               onClick={() => setTypeFilter('seller')}
-              className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap cursor-pointer ${
+              className={`min-h-[40px] sm:min-h-0 px-2.5 py-1.5 sm:py-1 rounded-lg sm:rounded transition-colors whitespace-nowrap cursor-pointer ${
                 typeFilter === 'seller' ? 'bg-cream text-olive-900 font-semibold shadow-2xs' : 'text-tan-600 hover:text-olive-900'
               }`}
             >
@@ -126,7 +126,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({ onOpenClient, onOp
             </button>
             <button
               onClick={() => setTypeFilter('investor')}
-              className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap cursor-pointer ${
+              className={`min-h-[40px] sm:min-h-0 px-2.5 py-1.5 sm:py-1 rounded-lg sm:rounded transition-colors whitespace-nowrap cursor-pointer ${
                 typeFilter === 'investor' ? 'bg-cream text-olive-900 font-semibold shadow-2xs' : 'text-tan-600 hover:text-olive-900'
               }`}
             >
@@ -134,12 +134,12 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({ onOpenClient, onOp
             </button>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-tan-600">
-            <Filter className="w-3.5 h-3.5 text-tan-400" />
+          <div className="flex items-center gap-2 text-sm sm:text-xs text-tan-600">
+            <Filter className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-tan-400 shrink-0" />
             <select
               value={stageFilter}
               onChange={(e) => setStageFilter(e.target.value as any)}
-              className="bg-cream border border-tan-200 rounded px-2.5 py-1.5 text-olive-900 text-xs focus:outline-none focus:border-olive-700"
+              className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 bg-cream border border-tan-200 rounded-xl sm:rounded px-3 sm:px-2.5 py-2 sm:py-1.5 text-olive-900 text-base sm:text-xs focus:outline-none focus:border-olive-700"
             >
               <option value="all">All Stages</option>
               <option value="new_lead">New Lead</option>
@@ -153,8 +153,108 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({ onOpenClient, onOp
         </div>
       </div>
 
-      {/* High-Density Data Grid */}
-      <div className="bg-cream border border-tan-200 rounded-lg overflow-hidden">
+      {/* Mobile Directory Cards (< md) */}
+      <div className="md:hidden space-y-3">
+        {sorted.length === 0 ? (
+          <div className="bg-cream border border-tan-200 rounded-xl p-8 text-center text-sm text-tan-500">
+            No clients match the selected filters.
+          </div>
+        ) : (
+          sorted.map((client) => {
+            const rel = getRelativeDaysLabel(client.nextFollowUpDate);
+            return (
+              <div
+                key={`mobile-contact-${client.id}`}
+                onClick={() => onOpenClient(client)}
+                className="bg-cream border border-tan-200 rounded-xl p-4 space-y-3 active:bg-tan-50 cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar name={client.name} src={client.avatarUrl} size="md" />
+                    <div className="min-w-0">
+                      <div className="text-[15px] font-bold text-olive-900 truncate">
+                        {client.lastName && client.firstName
+                          ? `${client.lastName}, ${client.firstName}`
+                          : client.name}
+                      </div>
+                      <div className="text-sm text-tan-600 tabular-nums mt-0.5">
+                        {client.phone}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`text-xs tabular-nums shrink-0 pt-0.5 ${
+                      rel.isOverdue
+                        ? 'text-rust-600 font-bold'
+                        : rel.isToday
+                        ? 'text-olive-700 font-bold'
+                        : 'text-tan-500 font-medium'
+                    }`}
+                  >
+                    {rel.label}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 text-xs pt-2 border-t border-tan-100">
+                  <div className="flex items-center gap-2 text-tan-600">
+                    <span className="font-semibold text-olive-900 capitalize">
+                      {client.stage.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-tan-300">·</span>
+                    <span className="capitalize">{client.type.replace('_', ' ')}</span>
+                  </div>
+                  <span className="text-sm font-bold text-olive-900 tabular-nums">
+                    {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
+                  </span>
+                </div>
+
+                {client.hasSecondaryContact && client.secondaryContact && (
+                  <div className="text-xs text-tan-600 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-olive-700 shrink-0" />
+                    <span>
+                      2nd: {client.secondaryContact.firstName} {client.secondaryContact.lastName}
+                    </span>
+                  </div>
+                )}
+
+                <div
+                  className="grid grid-cols-3 gap-2 pt-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => handleCall(client, e)}
+                    className="min-h-[42px] px-2.5 bg-tan-100 active:bg-tan-200 text-olive-900 rounded-lg text-[13px] font-medium flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Phone className="w-4 h-4 text-tan-600" />
+                    <span>Call</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenCompose(client, 'sms')}
+                    className="min-h-[42px] px-2.5 bg-tan-100 active:bg-tan-200 text-olive-900 rounded-lg text-[13px] font-medium flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <MessageSquare className="w-4 h-4 text-tan-600" />
+                    <span>Text</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenCompose(client, 'email')}
+                    className="min-h-[42px] px-2.5 bg-tan-100 active:bg-tan-200 text-olive-900 rounded-lg text-[13px] font-medium flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Mail className="w-4 h-4 text-tan-600" />
+                    <span>Email</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop High-Density Data Grid (>= md) */}
+      <div className="hidden md:block bg-cream border border-tan-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>

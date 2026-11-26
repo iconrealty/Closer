@@ -12,6 +12,7 @@ import {
 import { INITIAL_CLIENTS } from '../data/initialData';
 
 const STORAGE_KEY = 'simpl_crm_clients_v5';
+const MIN_SQFT_MIGRATION_KEY = 'closer_min_sqft_default_500_v1';
 
 interface CrmContextType {
   clients: Client[];
@@ -74,10 +75,11 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [clients, setClients] = useState<Client[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
+      const hasMigratedMinSqft = localStorage.getItem(MIN_SQFT_MIGRATION_KEY) === '1';
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((c: any) => {
+          const mapped = parsed.map((c: any) => {
             if (!c.firstName || !c.lastName) {
               const parts = (c.name || 'Client').trim().split(' ');
               c.firstName = c.firstName || parts[0] || 'Client';
@@ -100,7 +102,7 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ) {
               c.primaryLocation = c.locations[0] || 'Irvine';
             }
-            if (!c.minSqft || c.minSqft <= 0) {
+            if (!hasMigratedMinSqft || !c.minSqft || c.minSqft <= 0) {
               c.minSqft = 500;
             }
             if (!c.propertyTypes || c.propertyTypes.length === 0) {
@@ -111,7 +113,14 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
             return c;
           });
+          if (!hasMigratedMinSqft) {
+            localStorage.setItem(MIN_SQFT_MIGRATION_KEY, '1');
+          }
+          return mapped;
         }
+      }
+      if (!hasMigratedMinSqft) {
+        localStorage.setItem(MIN_SQFT_MIGRATION_KEY, '1');
       }
     } catch {
       console.error('Failed to read from localStorage');
@@ -148,6 +157,7 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const formattedName = formatClientDisplayName(data);
     const newClient: Client = {
       ...data,
+      minSqft: data.minSqft && data.minSqft > 0 ? data.minSqft : 500,
       name: formattedName,
       id: `c-${Date.now()}`,
       isUnread: data.isUnread ?? (data.stage === 'new_lead'),

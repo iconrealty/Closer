@@ -356,9 +356,59 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-3rem)] bg-cream overflow-hidden">
-      {/* Top Workspace Tab Strip — Separated Architectural Tabs */}
-      <div className="border-b border-tan-200 bg-tan-50/75 px-4 sm:px-6 py-3 shrink-0 flex items-center justify-between gap-4">
+    <div className="flex-1 flex flex-col min-h-0 bg-cream overflow-hidden">
+      {/* Mobile Compact Segmented Switcher */}
+      <div className="md:hidden border-b border-tan-200 bg-tan-50/90 px-3 py-2 shrink-0">
+        <div className="grid grid-cols-3 gap-1.5 bg-tan-200/60 p-1 rounded-xl" role="tablist" aria-label="Dashboard sections">
+          <button
+            type="button"
+            onClick={() => onChangeTab('dashboard')}
+            className={`min-h-[40px] rounded-lg text-[13px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'dashboard'
+                ? 'bg-cream text-olive-900 shadow-xs'
+                : 'text-tan-600'
+            }`}
+          >
+            <span>Overview</span>
+            <span className="text-xs tabular-nums opacity-75">{circleClients.length}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeTab('follow_through')}
+            className={`min-h-[40px] rounded-lg text-[13px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'follow_through'
+                ? 'bg-cream text-olive-900 shadow-xs'
+                : 'text-tan-600'
+            }`}
+          >
+            <span>Today</span>
+            {totalFollowThroughCount > 0 && (
+              <span
+                className={`text-xs tabular-nums font-bold ${
+                  followThroughItems.overdue.length > 0 ? 'text-rust-600' : 'text-olive-700'
+                }`}
+              >
+                {totalFollowThroughCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeTab('little_moments')}
+            className={`min-h-[40px] rounded-lg text-[13px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'little_moments'
+                ? 'bg-cream text-olive-900 shadow-xs'
+                : 'text-tan-600'
+            }`}
+          >
+            <span>Moments</span>
+            <span className="text-xs tabular-nums opacity-75">{conversationFeed.length}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Top Workspace Tab Strip — Separated Architectural Tabs */}
+      <div className="hidden md:flex border-b border-tan-200 bg-tan-50/75 px-4 sm:px-6 py-3 shrink-0 items-center justify-between gap-4">
         <nav
           className="flex items-stretch gap-3 overflow-x-auto no-scrollbar py-0.5"
           aria-label="Dashboard sections"
@@ -518,32 +568,32 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
       </div>
 
       {/* Main Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-6">
+      <div className="flex-1 overflow-y-auto px-3.5 sm:px-6 py-4 sm:py-5 pb-28 md:pb-6 space-y-5 sm:space-y-6">
         {/* ============================================================ */}
         {/* TAB 1: MAIN DASHBOARD                                        */}
         {/* ============================================================ */}
         {activeTab === 'dashboard' && (
           <div className="max-w-6xl mx-auto space-y-6">
             {/* 5-Card Interactive Summary Grid */}
-            <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+            <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-3">
               {/* 1. People in Your Circle */}
               <button
                 type="button"
                 onClick={() => setMetricFocus('circle')}
-                className={`p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                className={`p-3.5 sm:p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 min-h-[92px] ${
                   metricFocus === 'circle'
                     ? 'bg-olive-50/90 border-olive-700/45 ring-1 ring-olive-700/15 shadow-xs'
                     : 'bg-cream border-tan-200 hover:border-tan-300 hover:bg-tan-50/60'
                 }`}
               >
-                <span className="text-xs font-medium text-tan-600">
-                  People in Your Circle
+                <span className="text-[13px] sm:text-xs font-semibold text-tan-600 leading-snug">
+                  People in Circle
                 </span>
                 <div>
-                  <div className="text-2xl font-semibold text-olive-900 tabular-nums tracking-tight">
+                  <div className="text-2xl font-bold sm:font-semibold text-olive-900 tabular-nums tracking-tight">
                     {circleClients.length}
                   </div>
-                  <div className="text-[11px] text-tan-500 mt-0.5 tabular-nums">
+                  <div className="text-xs sm:text-[11px] text-tan-500 mt-0.5 tabular-nums">
                     {stats.activeClientsCount} active · {clients.filter((c) => c.stage === 'closed' || c.stage === 'long_term_nurture').length} sphere
                   </div>
                 </div>
@@ -553,20 +603,20 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={() => setMetricFocus('in_motion')}
-                className={`p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                className={`p-3.5 sm:p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 min-h-[92px] ${
                   metricFocus === 'in_motion'
                     ? 'bg-olive-50/90 border-olive-700/45 ring-1 ring-olive-700/15 shadow-xs'
                     : 'bg-cream border-tan-200 hover:border-tan-300 hover:bg-tan-50/60'
                 }`}
               >
-                <span className="text-xs font-medium text-tan-600">
+                <span className="text-[13px] sm:text-xs font-semibold text-tan-600 leading-snug">
                   In Motion
                 </span>
                 <div>
-                  <div className="text-2xl font-semibold text-olive-900 tabular-nums tracking-tight">
+                  <div className="text-2xl font-bold sm:font-semibold text-olive-900 tabular-nums tracking-tight">
                     {inMotionClients.length}
                   </div>
-                  <div className="text-[11px] text-tan-500 mt-0.5 tabular-nums">
+                  <div className="text-xs sm:text-[11px] text-tan-500 mt-0.5 tabular-nums">
                     {clients.filter((c) => c.stage === 'active_showing').length} showing · {stats.underContractCount} escrow
                   </div>
                 </div>
@@ -576,25 +626,25 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={() => setMetricFocus('attention')}
-                className={`p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                className={`p-3.5 sm:p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 min-h-[92px] ${
                   metricFocus === 'attention'
                     ? 'bg-olive-50/90 border-olive-700/45 ring-1 ring-olive-700/15 shadow-xs'
                     : 'bg-cream border-tan-200 hover:border-tan-300 hover:bg-tan-50/60'
                 }`}
               >
-                <span className="text-xs font-medium text-tan-600">
-                  Needs Your Attention
+                <span className="text-[13px] sm:text-xs font-semibold text-tan-600 leading-snug">
+                  Needs Attention
                 </span>
                 <div>
                   <div
-                    className={`text-2xl font-semibold tabular-nums tracking-tight ${
+                    className={`text-2xl font-bold sm:font-semibold tabular-nums tracking-tight ${
                       stats.overdueCount > 0 ? 'text-rust-600' : 'text-olive-900'
                     }`}
                   >
                     {needsAttentionClients.length}
                   </div>
-                  <div className="text-[11px] text-tan-500 mt-0.5 tabular-nums">
-                    {stats.overdueCount} overdue · {stats.dueTodayCount} due today
+                  <div className="text-xs sm:text-[11px] text-tan-500 mt-0.5 tabular-nums">
+                    {stats.overdueCount} overdue · {stats.dueTodayCount} today
                   </div>
                 </div>
               </button>
@@ -603,20 +653,20 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={() => setMetricFocus('pipeline')}
-                className={`p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                className={`p-3.5 sm:p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 min-h-[92px] ${
                   metricFocus === 'pipeline'
                     ? 'bg-olive-50/90 border-olive-700/45 ring-1 ring-olive-700/15 shadow-xs'
                     : 'bg-cream border-tan-200 hover:border-tan-300 hover:bg-tan-50/60'
                 }`}
               >
-                <span className="text-xs font-medium text-tan-600">
+                <span className="text-[13px] sm:text-xs font-semibold text-tan-600 leading-snug">
                   Pipeline Value
                 </span>
-                <div>
-                  <div className="text-2xl font-semibold text-olive-900 tabular-nums tracking-tight">
+                <div className="min-w-0">
+                  <div className="text-xl sm:text-2xl font-bold sm:font-semibold text-olive-900 tabular-nums tracking-tight truncate">
                     {formatCurrency(stats.totalPipelineValue)}
                   </div>
-                  <div className="text-[11px] text-olive-700 font-medium mt-0.5 tabular-nums">
+                  <div className="text-xs sm:text-[11px] text-olive-700 font-medium mt-0.5 tabular-nums truncate">
                     Est. 2%: {formatCurrency(stats.estimatedCommission)}
                   </div>
                 </div>
@@ -626,20 +676,20 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={() => setMetricFocus('unread')}
-                className={`p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 col-span-2 md:col-span-1 ${
+                className={`p-3.5 sm:p-4 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 col-span-2 md:col-span-1 ${
                   metricFocus === 'unread'
                     ? 'bg-olive-50/90 border-olive-700/45 ring-1 ring-olive-700/15 shadow-xs'
                     : 'bg-cream border-tan-200 hover:border-tan-300 hover:bg-tan-50/60'
                 }`}
               >
-                <span className="text-xs font-medium text-tan-600">
+                <span className="text-[13px] sm:text-xs font-semibold text-tan-600">
                   Unread
                 </span>
-                <div>
-                  <div className="text-2xl font-semibold text-olive-900 tabular-nums tracking-tight">
+                <div className="flex items-baseline justify-between md:block">
+                  <div className="text-2xl font-bold sm:font-semibold text-olive-900 tabular-nums tracking-tight">
                     {unreadClients.length}
                   </div>
-                  <div className="text-[11px] text-tan-500 mt-0.5">
+                  <div className="text-xs sm:text-[11px] text-tan-500 mt-0.5">
                     {unreadClients.length === 0 ? 'All caught up' : 'Awaiting review'}
                   </div>
                 </div>
@@ -648,9 +698,9 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
 
             {/* Focused List Section */}
             <section className="border border-tan-200 rounded-xl bg-cream overflow-hidden">
-              <div className="px-4 py-3 border-b border-tan-200 bg-tan-50 flex items-center justify-between gap-4 flex-wrap">
+              <div className="px-4 py-3.5 sm:py-3 border-b border-tan-200 bg-tan-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-sm font-semibold text-olive-900">
+                  <h2 className="text-base sm:text-sm font-bold sm:font-semibold text-olive-900">
                     {focusLabels[metricFocus].title}
                   </h2>
                   <p className="text-xs text-tan-500 mt-0.5">
@@ -658,20 +708,20 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center gap-2 text-sm sm:text-xs">
                   <button
                     type="button"
                     onClick={() => onChangeTab('follow_through')}
-                    className="px-3 py-1.5 rounded-lg border border-tan-200 bg-cream hover:bg-tan-100 text-olive-900 font-medium transition-colors cursor-pointer whitespace-nowrap"
+                    className="flex-1 sm:flex-initial min-h-[42px] sm:min-h-0 px-3 py-2 sm:py-1.5 rounded-lg border border-tan-200 bg-cream hover:bg-tan-100 text-olive-900 font-medium transition-colors cursor-pointer whitespace-nowrap"
                   >
-                    Open The Next Right Thing
+                    Today&apos;s Queue
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(true)}
-                    className="px-3 py-1.5 rounded-lg bg-olive-700 hover:bg-olive-800 text-cream font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1"
+                    className="flex-1 sm:flex-initial min-h-[42px] sm:min-h-0 px-3 py-2 sm:py-1.5 rounded-lg bg-olive-700 hover:bg-olive-800 text-cream font-semibold transition-colors cursor-pointer whitespace-nowrap flex items-center justify-center gap-1.5"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                     <span>Add Client</span>
                   </button>
                 </div>
@@ -679,10 +729,10 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
 
               {focusedClients.length === 0 ? (
                 <div className="p-10 text-center space-y-2">
-                  <p className="text-sm font-medium text-olive-900">
+                  <p className="text-base sm:text-sm font-medium text-olive-900">
                     Nothing in {focusLabels[metricFocus].title.toLowerCase()} right now
                   </p>
-                  <p className="text-xs text-tan-500">
+                  <p className="text-sm sm:text-xs text-tan-500">
                     Switch summary cards above or add a new lead to see them here.
                   </p>
                 </div>
@@ -704,52 +754,70 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                       <div
                         key={client.id}
                         onClick={() => handleOpenAndMarkRead(client)}
-                        className={`px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition-colors ${
+                        className={`p-4 sm:px-4 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition-colors ${
                           client.isUnread
                             ? 'bg-olive-50/45 hover:bg-olive-50/80'
                             : 'hover:bg-tan-50'
                         }`}
                       >
                         <div className="flex items-start gap-3 min-w-0">
-                          <Avatar name={displayName} src={client.avatarUrl} size="sm" />
-                          <div className="min-w-0 space-y-0.5">
-                            <div className="flex items-center gap-2 flex-wrap text-xs">
+                          <Avatar name={displayName} src={client.avatarUrl} size="md" className="sm:w-7 sm:h-7 sm:text-xs" />
+                          <div className="min-w-0 flex-1 space-y-1 sm:space-y-0.5">
+                            <div className="flex items-center justify-between gap-2 sm:justify-start">
+                              <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                                <span
+                                  className={`text-[15px] sm:text-xs text-olive-900 truncate ${
+                                    client.isUnread ? 'font-bold' : 'font-semibold'
+                                  }`}
+                                >
+                                  {displayName}
+                                </span>
+                                {client.isUnread && (
+                                  <span className="text-xs sm:text-[11px] font-semibold text-olive-700">
+                                    · Unread
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Mobile due status aligned top-right for instant scan */}
                               <span
-                                className={`text-olive-900 truncate ${
-                                  client.isUnread ? 'font-bold' : 'font-semibold'
+                                className={`sm:hidden text-xs tabular-nums shrink-0 ${
+                                  isOverdue
+                                    ? 'text-rust-600 font-bold'
+                                    : isDueToday
+                                    ? 'text-olive-700 font-bold'
+                                    : 'text-tan-500'
                                 }`}
                               >
-                                {displayName}
+                                {rel.label}
                               </span>
-                              {client.isUnread && (
-                                <>
-                                  <span className="text-tan-300" aria-hidden="true">·</span>
-                                  <span className="text-[11px] font-semibold text-olive-700">
-                                    Unread
-                                  </span>
-                                </>
-                              )}
-                              <span className="text-tan-300" aria-hidden="true">·</span>
-                              <span className="text-tan-600">{stageLabel(client.stage)}</span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 flex-wrap text-xs sm:text-xs text-tan-600">
+                              <span>{stageLabel(client.stage)}</span>
                               {client.locations.length > 0 && (
                                 <>
                                   <span className="text-tan-300" aria-hidden="true">·</span>
                                   <span className="text-tan-500">{client.locations[0]}</span>
                                 </>
                               )}
+                              <span className="sm:hidden text-tan-300" aria-hidden="true">·</span>
+                              <span className="sm:hidden font-semibold text-olive-900 tabular-nums">
+                                {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
+                              </span>
                             </div>
 
-                            <p className="text-xs text-tan-600 truncate">
+                            <p className="text-sm sm:text-xs text-tan-600 line-clamp-2 sm:truncate leading-snug pt-0.5 sm:pt-0">
                               {client.nextFollowUpNote || client.criteriaNotes}
                             </p>
                           </div>
                         </div>
 
                         <div
-                          className="flex items-center justify-between sm:justify-end gap-4 shrink-0"
+                          className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 shrink-0 pt-1 sm:pt-0 border-t border-tan-100/80 sm:border-t-0"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <div className="text-left sm:text-right">
+                          <div className="hidden sm:block text-right">
                             <div className="text-xs font-semibold text-olive-900 tabular-nums">
                               {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
                             </div>
@@ -766,22 +834,24 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-2 sm:gap-1 w-full sm:w-auto">
                             <button
                               type="button"
                               onClick={(e) => handleCall(client, e)}
-                              className="p-1.5 text-tan-600 hover:text-olive-900 hover:bg-tan-100 rounded transition-colors cursor-pointer"
+                              className="flex-1 sm:flex-initial min-h-[42px] sm:min-h-0 px-3 sm:p-1.5 text-olive-900 sm:text-tan-600 hover:text-olive-900 bg-tan-100 sm:bg-transparent hover:bg-tan-200 sm:hover:bg-tan-100 rounded-lg sm:rounded transition-colors cursor-pointer flex items-center justify-center gap-1.5 text-[13px] sm:text-xs font-medium"
                               title="Call"
                             >
-                              <Phone className="w-3.5 h-3.5" />
+                              <Phone className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                              <span className="sm:hidden">Call</span>
                             </button>
                             <button
                               type="button"
                               onClick={(e) => handleSms(client, e)}
-                              className="p-1.5 text-tan-600 hover:text-olive-900 hover:bg-tan-100 rounded transition-colors cursor-pointer"
+                              className="flex-1 sm:flex-initial min-h-[42px] sm:min-h-0 px-3 sm:p-1.5 text-olive-900 sm:text-tan-600 hover:text-olive-900 bg-tan-100 sm:bg-transparent hover:bg-tan-200 sm:hover:bg-tan-100 rounded-lg sm:rounded transition-colors cursor-pointer flex items-center justify-center gap-1.5 text-[13px] sm:text-xs font-medium"
                               title="Text"
                             >
-                              <MessageSquare className="w-3.5 h-3.5" />
+                              <MessageSquare className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                              <span className="sm:hidden">Text</span>
                             </button>
                             <button
                               type="button"
@@ -789,19 +859,19 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                                 e.stopPropagation();
                                 toggleUnread(client.id);
                               }}
-                              className="p-1.5 text-tan-600 hover:text-olive-900 hover:bg-tan-100 rounded transition-colors cursor-pointer"
+                              className="min-w-[42px] sm:min-w-0 min-h-[42px] sm:min-h-0 p-2 sm:p-1.5 text-tan-600 hover:text-olive-900 bg-tan-100 sm:bg-transparent hover:bg-tan-100 rounded-lg sm:rounded transition-colors cursor-pointer flex items-center justify-center"
                               title={client.isUnread ? 'Mark as read' : 'Mark as unread'}
                             >
                               {client.isUnread ? (
-                                <MailOpen className="w-3.5 h-3.5 text-olive-700" />
+                                <MailOpen className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-olive-700" />
                               ) : (
-                                <Mail className="w-3.5 h-3.5" />
+                                <Mail className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                               )}
                             </button>
                             <button
                               type="button"
                               onClick={(e) => handleDone(client, e)}
-                              className="px-2 py-1 text-[11px] font-medium text-olive-800 bg-olive-50 hover:bg-olive-100 border border-olive-200 rounded transition-colors cursor-pointer"
+                              className="flex-1 sm:flex-initial min-h-[42px] sm:min-h-0 px-3 sm:px-2 py-2 sm:py-1 text-[13px] sm:text-[11px] font-semibold sm:font-medium text-olive-800 bg-olive-50 hover:bg-olive-100 border border-olive-200 rounded-lg sm:rounded transition-colors cursor-pointer flex items-center justify-center"
                               title="Mark follow-up complete"
                             >
                               Done
@@ -822,49 +892,49 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
         {/* ============================================================ */}
         {activeTab === 'follow_through' && (
           <div className="max-w-5xl mx-auto space-y-6">
-            <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-tan-200">
+            <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-4 border-b border-tan-200">
               <div>
-                <p className="text-xs font-medium text-olive-700">
+                <p className="text-xs font-semibold text-olive-700">
                   Today&apos;s Follow-Through
                 </p>
-                <h1 className="text-2xl font-semibold tracking-tight text-olive-900 mt-0.5">
+                <h1 className="text-xl sm:text-2xl font-bold sm:font-semibold tracking-tight text-olive-900 mt-0.5">
                   The Next Right Thing
                 </h1>
-                <p className="text-xs text-tan-500 mt-1">
-                  Focused daily order: overdue check-ins, new inbound leads, today&apos;s touches, and scheduled tours.
+                <p className="text-sm sm:text-xs text-tan-500 mt-1">
+                  Overdue check-ins, new leads, today&apos;s touches, and tours.
                 </p>
               </div>
 
               <div className="text-left sm:text-right shrink-0">
-                <div className="text-lg font-semibold text-olive-900 tabular-nums">
+                <div className="text-lg font-bold sm:font-semibold text-olive-900 tabular-nums">
                   {totalFollowThroughCount} remaining
                 </div>
-                <div className="text-[11px] text-tan-500 tabular-nums">
+                <div className="text-xs sm:text-[11px] text-tan-500 tabular-nums">
                   {followThroughItems.overdue.length} overdue · {followThroughItems.dueToday.length} due today
                 </div>
               </div>
             </header>
 
             {totalFollowThroughCount === 0 ? (
-              <div className="p-10 text-center border border-tan-200 rounded-xl bg-tan-50 space-y-3">
-                <p className="text-sm font-semibold text-olive-900">
+              <div className="p-8 sm:p-10 text-center border border-tan-200 rounded-xl bg-tan-50 space-y-3">
+                <p className="text-base sm:text-sm font-semibold text-olive-900">
                   All caught up for today
                 </p>
-                <p className="text-xs text-tan-500 max-w-md mx-auto">
+                <p className="text-sm sm:text-xs text-tan-500 max-w-md mx-auto">
                   Every scheduled follow-through is complete. Visit your circle or log a little moment to stay top of mind.
                 </p>
-                <div className="flex items-center justify-center gap-2 pt-1">
+                <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
                   <button
                     type="button"
                     onClick={() => onChangeTab('dashboard')}
-                    className="px-3.5 py-1.5 text-xs font-medium bg-cream hover:bg-tan-100 text-olive-900 border border-tan-300 rounded-lg cursor-pointer"
+                    className="min-h-[44px] sm:min-h-0 px-4 py-2 sm:py-1.5 text-sm sm:text-xs font-medium bg-cream hover:bg-tan-100 text-olive-900 border border-tan-300 rounded-lg cursor-pointer"
                   >
                     Back to Dashboard
                   </button>
                   <button
                     type="button"
                     onClick={() => onChangeTab('little_moments')}
-                    className="px-3.5 py-1.5 text-xs font-medium bg-olive-700 hover:bg-olive-800 text-cream rounded-lg cursor-pointer"
+                    className="min-h-[44px] sm:min-h-0 px-4 py-2 sm:py-1.5 text-sm sm:text-xs font-medium bg-olive-700 hover:bg-olive-800 text-cream rounded-lg cursor-pointer"
                   >
                     View Little Moments
                   </button>
@@ -876,10 +946,10 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                 {followThroughItems.overdue.length > 0 && (
                   <section className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-xs font-semibold uppercase tracking-wider text-rust-700">
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-rust-700">
                         Catch Up First ({followThroughItems.overdue.length})
                       </h2>
-                      <span className="text-[11px] text-tan-500">Past target date</span>
+                      <span className="text-xs sm:text-[11px] text-tan-500">Past target date</span>
                     </div>
 
                     <div className="border border-tan-200 rounded-xl bg-cream divide-y divide-tan-100">
@@ -892,46 +962,46 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                           <div
                             key={`ft-overdue-${client.id}`}
                             onClick={() => handleOpenAndMarkRead(client)}
-                            className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-tan-50 cursor-pointer transition-colors"
+                            className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3.5 hover:bg-tan-50 cursor-pointer transition-colors"
                           >
                             <div className="flex items-start gap-3 min-w-0">
-                              <Avatar name={displayName} src={client.avatarUrl} size="sm" />
-                              <div className="min-w-0 space-y-1">
-                                <div className="flex items-center gap-2 flex-wrap text-xs">
-                                  <span className="font-semibold text-olive-900">{displayName}</span>
+                              <Avatar name={displayName} src={client.avatarUrl} size="md" className="sm:w-7 sm:h-7 sm:text-xs" />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap text-sm sm:text-xs">
+                                  <span className="text-[15px] sm:text-xs font-bold sm:font-semibold text-olive-900">{displayName}</span>
                                   <span className="text-tan-300" aria-hidden="true">·</span>
-                                  <span className="text-rust-600 font-semibold tabular-nums">
+                                  <span className="text-rust-600 font-semibold tabular-nums text-xs">
                                     {rel.label}
                                   </span>
                                   <span className="text-tan-300" aria-hidden="true">·</span>
-                                  <span className="text-tan-600 tabular-nums">
+                                  <span className="text-tan-600 tabular-nums text-xs font-medium">
                                     {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
                                   </span>
                                 </div>
-                                <p className="text-xs text-olive-800">
+                                <p className="text-sm sm:text-xs text-olive-800 leading-snug">
                                   {client.nextFollowUpNote || 'Scheduled follow-up past due'}
                                 </p>
                               </div>
                             </div>
 
                             <div
-                              className="flex items-center gap-1.5 shrink-0 relative"
+                              className="flex items-center gap-2 sm:gap-1.5 shrink-0 relative w-full md:w-auto"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
                                 type="button"
                                 onClick={(e) => handleCall(client, e)}
-                                className="px-2.5 py-1.5 text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex-1 md:flex-initial min-h-[44px] md:min-h-0 px-3 py-2 md:py-1.5 text-[13px] md:text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                <Phone className="w-3.5 h-3.5" />
+                                <Phone className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 <span>Call</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={(e) => handleSms(client, e)}
-                                className="px-2.5 py-1.5 text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex-1 md:flex-initial min-h-[44px] md:min-h-0 px-3 py-2 md:py-1.5 text-[13px] md:text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                <MessageSquare className="w-3.5 h-3.5" />
+                                <MessageSquare className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 <span>Text</span>
                               </button>
                               <div className="relative">
@@ -940,31 +1010,31 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                                   onClick={() =>
                                     setSnoozeClientId(isSnoozeOpen ? null : client.id)
                                   }
-                                  className="p-1.5 text-tan-600 hover:text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer"
+                                  className="min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 p-2 md:p-1.5 text-tan-600 hover:text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
                                   title="Reschedule"
                                 >
-                                  <Clock className="w-3.5 h-3.5" />
+                                  <Clock className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 </button>
                                 {isSnoozeOpen && (
-                                  <div className="absolute right-0 top-full mt-1 w-28 bg-cream border border-tan-200 rounded-md shadow-md p-1 z-30 text-xs">
+                                  <div className="absolute right-0 top-full mt-1 w-32 bg-cream border border-tan-200 rounded-xl shadow-lg p-1.5 z-30 text-sm md:text-xs space-y-1">
                                     <button
                                       type="button"
                                       onClick={(e) => handleSnooze(client, 1, e)}
-                                      className="w-full text-left px-2.5 py-1 hover:bg-tan-100 rounded text-olive-900 cursor-pointer"
+                                      className="w-full min-h-[40px] md:min-h-0 text-left px-3 py-1.5 md:py-1 hover:bg-tan-100 rounded-lg text-olive-900 cursor-pointer"
                                     >
                                       +1 Day
                                     </button>
                                     <button
                                       type="button"
                                       onClick={(e) => handleSnooze(client, 3, e)}
-                                      className="w-full text-left px-2.5 py-1 hover:bg-tan-100 rounded text-olive-900 cursor-pointer"
+                                      className="w-full min-h-[40px] md:min-h-0 text-left px-3 py-1.5 md:py-1 hover:bg-tan-100 rounded-lg text-olive-900 cursor-pointer"
                                     >
                                       +3 Days
                                     </button>
                                     <button
                                       type="button"
                                       onClick={(e) => handleSnooze(client, 7, e)}
-                                      className="w-full text-left px-2.5 py-1 hover:bg-tan-100 rounded text-olive-900 cursor-pointer"
+                                      className="w-full min-h-[40px] md:min-h-0 text-left px-3 py-1.5 md:py-1 hover:bg-tan-100 rounded-lg text-olive-900 cursor-pointer"
                                     >
                                       +1 Week
                                     </button>
@@ -974,9 +1044,9 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                               <button
                                 type="button"
                                 onClick={(e) => handleDone(client, e)}
-                                className="px-3 py-1.5 text-xs font-medium text-cream bg-olive-700 hover:bg-olive-800 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex-1 md:flex-initial min-h-[44px] md:min-h-0 px-3.5 py-2 md:py-1.5 text-[13px] md:text-xs font-semibold text-cream bg-olive-700 hover:bg-olive-800 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                <Check className="w-3.5 h-3.5" />
+                                <Check className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 <span>Done</span>
                               </button>
                             </div>
@@ -991,10 +1061,10 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                 {followThroughItems.inbound.length > 0 && (
                   <section className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-xs font-semibold uppercase tracking-wider text-olive-900">
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-olive-900">
                         New Leads — First Contact ({followThroughItems.inbound.length})
                       </h2>
-                      <span className="text-[11px] text-tan-500">Warm introduction</span>
+                      <span className="text-xs sm:text-[11px] text-tan-500">Warm introduction</span>
                     </div>
 
                     <div className="border border-tan-200 rounded-xl bg-cream divide-y divide-tan-100">
@@ -1004,52 +1074,52 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                           <div
                             key={`ft-inbound-${client.id}`}
                             onClick={() => handleOpenAndMarkRead(client)}
-                            className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-tan-50 cursor-pointer transition-colors"
+                            className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3.5 hover:bg-tan-50 cursor-pointer transition-colors"
                           >
                             <div className="flex items-start gap-3 min-w-0">
-                              <Avatar name={displayName} src={client.avatarUrl} size="sm" />
-                              <div className="min-w-0 space-y-1">
-                                <div className="flex items-center gap-2 flex-wrap text-xs">
-                                  <span className="font-semibold text-olive-900">{displayName}</span>
+                              <Avatar name={displayName} src={client.avatarUrl} size="md" className="sm:w-7 sm:h-7 sm:text-xs" />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap text-sm sm:text-xs">
+                                  <span className="text-[15px] sm:text-xs font-bold sm:font-semibold text-olive-900">{displayName}</span>
                                   <span className="text-tan-300" aria-hidden="true">·</span>
-                                  <span className="text-olive-700 font-medium">{client.source}</span>
+                                  <span className="text-olive-700 font-medium text-xs">{client.source}</span>
                                   <span className="text-tan-300" aria-hidden="true">·</span>
-                                  <span className="text-tan-500 tabular-nums">
+                                  <span className="text-tan-500 tabular-nums text-xs">
                                     {formatTimeAgo(client.createdAt)}
                                   </span>
                                 </div>
-                                <p className="text-xs text-tan-600">
+                                <p className="text-sm sm:text-xs text-tan-600 leading-snug">
                                   {client.nextFollowUpNote || client.criteriaNotes}
                                 </p>
                               </div>
                             </div>
 
                             <div
-                              className="flex items-center gap-1.5 shrink-0"
+                              className="flex items-center gap-2 sm:gap-1.5 shrink-0 w-full md:w-auto"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
                                 type="button"
                                 onClick={(e) => handleCall(client, e)}
-                                className="px-3 py-1.5 text-xs font-medium text-cream bg-olive-700 hover:bg-olive-800 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex-1 md:flex-initial min-h-[44px] md:min-h-0 px-3 py-2 md:py-1.5 text-[13px] md:text-xs font-semibold text-cream bg-olive-700 hover:bg-olive-800 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                <Phone className="w-3.5 h-3.5" />
+                                <Phone className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 <span>Call Now</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={(e) => handleSms(client, e)}
-                                className="px-2.5 py-1.5 text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex-1 md:flex-initial min-h-[44px] md:min-h-0 px-3 py-2 md:py-1.5 text-[13px] md:text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                <MessageSquare className="w-3.5 h-3.5" />
+                                <MessageSquare className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 <span>Text</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={(e) => handleEmail(client, e)}
-                                className="px-2.5 py-1.5 text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex-1 md:flex-initial min-h-[44px] md:min-h-0 px-3 py-2 md:py-1.5 text-[13px] md:text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                <Mail className="w-3.5 h-3.5" />
+                                <Mail className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 <span>Email</span>
                               </button>
                             </div>
@@ -1064,10 +1134,10 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                 {followThroughItems.dueToday.length > 0 && (
                   <section className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-xs font-semibold uppercase tracking-wider text-olive-900">
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-olive-900">
                         Due Today ({followThroughItems.dueToday.length})
                       </h2>
-                      <span className="text-[11px] text-tan-500">Scheduled touches</span>
+                      <span className="text-xs sm:text-[11px] text-tan-500">Scheduled touches</span>
                     </div>
 
                     <div className="border border-tan-200 rounded-xl bg-cream divide-y divide-tan-100">
@@ -1077,52 +1147,52 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                           <div
                             key={`ft-today-${client.id}`}
                             onClick={() => handleOpenAndMarkRead(client)}
-                            className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-tan-50 cursor-pointer transition-colors"
+                            className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3.5 hover:bg-tan-50 cursor-pointer transition-colors"
                           >
                             <div className="flex items-start gap-3 min-w-0">
-                              <Avatar name={displayName} src={client.avatarUrl} size="sm" />
-                              <div className="min-w-0 space-y-1">
-                                <div className="flex items-center gap-2 flex-wrap text-xs">
-                                  <span className="font-semibold text-olive-900">{displayName}</span>
+                              <Avatar name={displayName} src={client.avatarUrl} size="md" className="sm:w-7 sm:h-7 sm:text-xs" />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap text-sm sm:text-xs">
+                                  <span className="text-[15px] sm:text-xs font-bold sm:font-semibold text-olive-900">{displayName}</span>
                                   <span className="text-tan-300" aria-hidden="true">·</span>
-                                  <span className="text-olive-700 font-medium">Today</span>
+                                  <span className="text-olive-700 font-semibold text-xs">Today</span>
                                   <span className="text-tan-300" aria-hidden="true">·</span>
-                                  <span className="text-tan-600 tabular-nums">
+                                  <span className="text-tan-600 tabular-nums text-xs font-medium">
                                     {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
                                   </span>
                                 </div>
-                                <p className="text-xs text-olive-800">
+                                <p className="text-sm sm:text-xs text-olive-800 leading-snug">
                                   {client.nextFollowUpNote || 'Regular check-in'}
                                 </p>
                               </div>
                             </div>
 
                             <div
-                              className="flex items-center gap-1.5 shrink-0"
+                              className="flex items-center gap-2 sm:gap-1.5 shrink-0 w-full md:w-auto"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
                                 type="button"
                                 onClick={(e) => handleCall(client, e)}
-                                className="px-2.5 py-1.5 text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex-1 md:flex-initial min-h-[44px] md:min-h-0 px-3 py-2 md:py-1.5 text-[13px] md:text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                <Phone className="w-3.5 h-3.5" />
+                                <Phone className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 <span>Call</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={(e) => handleSms(client, e)}
-                                className="px-2.5 py-1.5 text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex-1 md:flex-initial min-h-[44px] md:min-h-0 px-3 py-2 md:py-1.5 text-[13px] md:text-xs font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                <MessageSquare className="w-3.5 h-3.5" />
+                                <MessageSquare className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 <span>Text</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={(e) => handleDone(client, e)}
-                                className="px-3 py-1.5 text-xs font-medium text-cream bg-olive-700 hover:bg-olive-800 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex-1 md:flex-initial min-h-[44px] md:min-h-0 px-3.5 py-2 md:py-1.5 text-[13px] md:text-xs font-semibold text-cream bg-olive-700 hover:bg-olive-800 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                <Check className="w-3.5 h-3.5" />
+                                <Check className="w-4 h-4 md:w-3.5 md:h-3.5" />
                                 <span>Done</span>
                               </button>
                             </div>
@@ -1137,10 +1207,10 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                 {followThroughItems.upcomingShowings.length > 0 && (
                   <section className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-xs font-semibold uppercase tracking-wider text-tan-600">
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-tan-600">
                         Property Tours ({followThroughItems.upcomingShowings.length})
                       </h2>
-                      <span className="text-[11px] text-tan-500">Confirm times & lockboxes</span>
+                      <span className="text-xs sm:text-[11px] text-tan-500">Confirm times &amp; lockboxes</span>
                     </div>
 
                     <div className="border border-tan-200 rounded-xl bg-cream divide-y divide-tan-100">
@@ -1150,11 +1220,11 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                           <div
                             key={item.id}
                             onClick={() => handleOpenAndMarkRead(item.client)}
-                            className={`p-3.5 flex items-center justify-between gap-4 cursor-pointer hover:bg-tan-50 transition-colors ${
+                            className={`p-4 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 cursor-pointer hover:bg-tan-50 transition-colors ${
                               isChecked ? 'opacity-50' : ''
                             }`}
                           >
-                            <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-start sm:items-center gap-3 min-w-0">
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -1166,20 +1236,20 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                                     return next;
                                   });
                                 }}
-                                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 cursor-pointer ${
+                                className={`w-6 h-6 sm:w-4 sm:h-4 rounded-md sm:rounded border flex items-center justify-center shrink-0 cursor-pointer mt-0.5 sm:mt-0 ${
                                   isChecked
                                     ? 'bg-olive-700 border-olive-700 text-cream'
                                     : 'border-tan-300 bg-cream'
                                 }`}
                               >
-                                {isChecked && <Check className="w-3 h-3" />}
+                                {isChecked && <Check className="w-4 h-4 sm:w-3 sm:h-3" />}
                               </button>
 
                               <div className="min-w-0">
-                                <div className={`text-xs font-semibold text-olive-900 truncate ${isChecked ? 'line-through' : ''}`}>
+                                <div className={`text-[15px] sm:text-xs font-semibold text-olive-900 leading-snug ${isChecked ? 'line-through' : ''}`}>
                                   {item.address}
                                 </div>
-                                <div className="text-[11px] text-tan-500 flex items-center gap-2 tabular-nums">
+                                <div className="text-xs sm:text-[11px] text-tan-500 flex items-center gap-2 tabular-nums mt-0.5">
                                   <span>{formatClientDisplayName(item.client)}</span>
                                   {item.price && (
                                     <>
@@ -1191,8 +1261,8 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-1.5 text-xs text-olive-700 font-medium tabular-nums shrink-0">
-                              <Calendar className="w-3.5 h-3.5" />
+                            <div className="flex items-center gap-1.5 text-sm sm:text-xs text-olive-700 font-semibold sm:font-medium tabular-nums shrink-0 pl-9 sm:pl-0">
+                              <Calendar className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                               <span>
                                 {item.showingDate} {item.showingTime ? `at ${item.showingTime}` : ''}
                               </span>
@@ -1213,12 +1283,12 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
         {/* ============================================================ */}
         {activeTab === 'little_moments' && (
           <div className="max-w-5xl mx-auto space-y-6">
-            <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-tan-200">
+            <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-4 border-b border-tan-200">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-olive-900">
+                <h1 className="text-xl sm:text-2xl font-bold sm:font-semibold tracking-tight text-olive-900">
                   Little Moments, Kept Close
                 </h1>
-                <p className="text-xs font-medium text-tan-600 mt-1">
+                <p className="text-sm sm:text-xs font-medium text-tan-600 mt-1">
                   Recent Conversations
                 </p>
               </div>
@@ -1234,7 +1304,7 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
               className="border border-tan-200 rounded-xl bg-tan-50 p-4 space-y-3"
             >
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-xs font-semibold text-olive-900">
+                <span className="text-sm sm:text-xs font-semibold text-olive-900">
                   Remember a detail or conversation
                 </span>
                 {momentSavedNotice && (
@@ -1249,7 +1319,7 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                 <select
                   value={momentClientId || clients[0]?.id || ''}
                   onChange={(e) => setMomentClientId(e.target.value)}
-                  className="sm:col-span-4 bg-cream border border-tan-300 rounded-lg px-2.5 py-2 text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700"
+                  className="sm:col-span-4 bg-cream border border-tan-300 rounded-lg px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 text-base sm:text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700"
                 >
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -1261,7 +1331,7 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                 <select
                   value={momentType}
                   onChange={(e) => setMomentType(e.target.value as ActivityType)}
-                  className="sm:col-span-2 bg-cream border border-tan-300 rounded-lg px-2.5 py-2 text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700"
+                  className="sm:col-span-2 bg-cream border border-tan-300 rounded-lg px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 text-base sm:text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700"
                 >
                   <option value="note">Note</option>
                   <option value="call">Call</option>
@@ -1274,13 +1344,13 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                   type="text"
                   value={momentText}
                   onChange={(e) => setMomentText(e.target.value)}
-                  placeholder="e.g. Mentioned dog’s name is Cooper, loves morning sunlight..."
-                  className="sm:col-span-4 bg-cream border border-tan-300 rounded-lg px-3 py-2 text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                  placeholder="e.g. Mentioned dog’s name is Cooper..."
+                  className="sm:col-span-4 bg-cream border border-tan-300 rounded-lg px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
                 />
 
                 <button
                   type="submit"
-                  className="sm:col-span-2 px-3.5 py-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
+                  className="sm:col-span-2 min-h-[44px] sm:min-h-0 px-3.5 py-2.5 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-sm sm:text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
                 >
                   Save Moment
                 </button>
@@ -1288,7 +1358,7 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
             </form>
 
             {/* Channel Filters */}
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-1.5 overflow-x-auto no-scrollbar pb-1">
               {(
                 [
                   { id: 'all', label: 'All' },
@@ -1303,7 +1373,7 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                   key={ch.id}
                   type="button"
                   onClick={() => setChannelFilter(ch.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                  className={`min-h-[42px] sm:min-h-0 px-3.5 sm:px-3 py-2 sm:py-1.5 rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                     channelFilter === ch.id
                       ? 'bg-olive-700 text-cream'
                       : 'bg-cream hover:bg-tan-50 text-tan-600 border border-tan-200'
@@ -1317,10 +1387,10 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
             {/* Chronological Conversation Feed */}
             {conversationFeed.length === 0 ? (
               <div className="p-10 text-center border border-tan-200 rounded-xl bg-cream space-y-2">
-                <p className="text-sm font-medium text-olive-900">
+                <p className="text-base sm:text-sm font-medium text-olive-900">
                   No conversations match this filter
                 </p>
-                <p className="text-xs text-tan-500">
+                <p className="text-sm sm:text-xs text-tan-500">
                   Log a note above or clear your search filter to view recent conversations.
                 </p>
               </div>
@@ -1338,35 +1408,36 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                         <Avatar
                           name={displayName}
                           src={item.client.avatarUrl}
-                          size="sm"
+                          size="md"
+                          className="sm:w-7 sm:h-7 sm:text-xs"
                         />
-                        <div className="min-w-0 space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap text-xs">
-                            <span className="font-semibold text-olive-900">
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap text-sm sm:text-xs">
+                            <span className="text-[15px] sm:text-xs font-bold sm:font-semibold text-olive-900">
                               {displayName}
                             </span>
                             <span className="text-tan-300" aria-hidden="true">·</span>
-                            <span className="text-olive-700 font-medium">
+                            <span className="text-olive-700 font-medium text-xs">
                               {activityChannelLabel(item.type)}
                             </span>
                             <span className="text-tan-300" aria-hidden="true">·</span>
-                            <span className="text-tan-500 tabular-nums">
-                              {formatTimeAgo(item.timestamp)} ({formatDate(item.timestamp)})
+                            <span className="text-tan-500 tabular-nums text-xs">
+                              {formatTimeAgo(item.timestamp)}
                             </span>
                           </div>
 
-                          <p className="text-xs font-medium text-olive-900">
+                          <p className="text-sm sm:text-xs font-medium text-olive-900">
                             {item.summary}
                           </p>
 
                           {item.details && (
-                            <p className="text-xs text-tan-600 leading-relaxed">
+                            <p className="text-sm sm:text-xs text-tan-600 leading-relaxed">
                               {item.details}
                             </p>
                           )}
 
                           {item.outcome && (
-                            <p className="text-[11px] text-olive-700 font-medium">
+                            <p className="text-xs sm:text-[11px] text-olive-700 font-medium">
                               Next: {item.outcome}
                             </p>
                           )}
@@ -1374,30 +1445,30 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                       </div>
 
                       <div
-                        className="flex items-center gap-1.5 shrink-0 self-end sm:self-start"
+                        className="flex items-center gap-2 sm:gap-1.5 shrink-0 w-full sm:w-auto sm:self-start pt-1 sm:pt-0"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <button
                           type="button"
                           onClick={(e) => handleSms(item.client, e)}
-                          className="px-2.5 py-1 text-[11px] font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded transition-colors cursor-pointer"
+                          className="flex-1 sm:flex-initial min-h-[42px] sm:min-h-0 px-3 sm:px-2.5 py-2 sm:py-1 text-[13px] sm:text-[11px] font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg sm:rounded transition-colors cursor-pointer"
                         >
                           Text
                         </button>
                         <button
                           type="button"
                           onClick={(e) => handleEmail(item.client, e)}
-                          className="px-2.5 py-1 text-[11px] font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded transition-colors cursor-pointer"
+                          className="flex-1 sm:flex-initial min-h-[42px] sm:min-h-0 px-3 sm:px-2.5 py-2 sm:py-1 text-[13px] sm:text-[11px] font-medium text-olive-900 bg-tan-100 hover:bg-tan-200 rounded-lg sm:rounded transition-colors cursor-pointer"
                         >
                           Email
                         </button>
                         <button
                           type="button"
                           onClick={() => handleOpenAndMarkRead(item.client)}
-                          className="p-1 text-tan-500 hover:text-olive-900 transition-colors cursor-pointer"
+                          className="min-w-[42px] min-h-[42px] sm:min-w-0 sm:min-h-0 p-2 sm:p-1 text-tan-500 hover:text-olive-900 transition-colors cursor-pointer flex items-center justify-center"
                           title="Open client profile"
                         >
-                          <ArrowUpRight className="w-3.5 h-3.5" />
+                          <ArrowUpRight className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                         </button>
                       </div>
                     </div>

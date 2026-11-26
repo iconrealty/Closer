@@ -82,6 +82,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
       source,
       targetPriceMin: targetPriceMin || 400000,
       targetPriceMax: targetPriceMax || 600000,
+      minSqft: 500,
       locations: locations.length > 0 ? locations : ['Metropolitan Area'],
       criteriaNotes: criteriaNotes.trim(),
       preApproved,
@@ -100,43 +101,44 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-olive-900/35 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-olive-900/35 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="bg-cream border border-tan-200 rounded-xl max-w-xl w-full p-6 shadow-2xl space-y-5 my-auto max-h-[92vh] overflow-y-auto"
+        className="bg-cream border-0 sm:border border-tan-200 rounded-none sm:rounded-xl max-w-xl w-full h-dvh sm:h-auto sm:max-h-[92vh] shadow-2xl flex flex-col overflow-hidden my-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-3 border-b border-tan-200">
+        <div className="flex items-center justify-between px-4 py-3.5 sm:px-6 sm:py-4 border-b border-tan-200 shrink-0 bg-cream">
           <div className="flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-olive-700" />
             <h2 className="text-lg font-bold text-olive-900">Add Client</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-tan-400 hover:text-olive-900 rounded hover:bg-tan-100 transition-colors cursor-pointer"
+            aria-label="Close modal"
+            className="min-w-[42px] min-h-[42px] sm:min-w-0 sm:min-h-0 p-2 sm:p-1.5 flex items-center justify-center text-tan-400 hover:text-olive-900 rounded-lg hover:bg-tan-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-sm sm:text-xs">
           {formError && (
-            <div className="p-2.5 bg-rust-50 border border-rust-200 text-rust-700 rounded-lg text-xs font-medium">
+            <div className="p-3 bg-rust-50 border border-rust-200 text-rust-700 rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium">
               {formError}
             </div>
           )}
 
           {/* Primary Client Section */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold text-tan-500 uppercase tracking-wider block">
+            <span className="text-xs sm:text-[11px] font-bold text-tan-500 uppercase tracking-wider block">
               Primary Client Information
             </span>
 
             {/* Separated First Name & Last Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-olive-900 mb-1 font-semibold">
+                <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
                   First Name <span className="text-rust-600">*</span>
                 </label>
                 <input
@@ -145,12 +147,12 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
                   placeholder="e.g. Jessica"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2.5 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
                 />
               </div>
 
               <div>
-                <label className="block text-olive-900 mb-1 font-semibold">
+                <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
                   Last Name <span className="text-rust-600">*</span>
                 </label>
                 <input
@@ -159,7 +161,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
                   placeholder="e.g. Williams"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2.5 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
                 />
               </div>
             </div>
@@ -167,7 +169,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
             {/* Phone & Email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-olive-900 mb-1 font-semibold">
+                <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
                   Phone Number <span className="text-rust-600">*</span>
                 </label>
                 <input
@@ -176,18 +178,18 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
                   placeholder="(512) 555-0199"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700 tabular-nums"
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2.5 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700 tabular-nums"
                 />
               </div>
 
               <div>
-                <label className="block text-olive-900 mb-1 font-semibold">Email Address</label>
+                <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">Email Address</label>
                 <input
                   type="email"
                   placeholder="jessica.williams@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2.5 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
                 />
               </div>
             </div>
@@ -199,13 +201,13 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
               <button
                 type="button"
                 onClick={() => setHasSecondaryContact(true)}
-                className="w-full py-2 px-3 border border-dashed border-olive-200 bg-olive-50/60 hover:bg-olive-50 text-olive-700 rounded-lg flex items-center justify-center gap-2 font-semibold transition-colors cursor-pointer"
+                className="w-full min-h-[46px] sm:min-h-0 py-2.5 px-3 border border-dashed border-olive-200 bg-olive-50/60 hover:bg-olive-50 text-olive-700 rounded-xl sm:rounded-lg flex items-center justify-center gap-2 font-semibold transition-colors cursor-pointer text-sm sm:text-xs"
               >
                 <Users className="w-4 h-4 text-olive-700" />
                 <span>+ Add 2nd Client (Co-Buyer / Spouse / Partner)</span>
               </button>
             ) : (
-              <div className="bg-tan-50 border border-tan-200 rounded-lg p-3.5 space-y-3">
+              <div className="bg-tan-50 border border-tan-200 rounded-xl sm:rounded-lg p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-olive-700" />
@@ -220,63 +222,63 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
                       setSecPhone('');
                       setSecEmail('');
                     }}
-                    className="text-tan-400 hover:text-rust-600 p-1 rounded cursor-pointer"
+                    className="min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center text-tan-400 hover:text-rust-600 p-1 rounded cursor-pointer"
                     title="Remove 2nd client"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-tan-600 mb-1 font-medium">2nd Client First Name</label>
+                    <label className="block text-tan-600 mb-1 font-medium text-xs sm:text-xs">2nd Client First Name</label>
                     <input
                       type="text"
                       placeholder="e.g. David"
                       value={secFirstName}
                       onChange={(e) => setSecFirstName(e.target.value)}
-                      className="w-full bg-cream border border-tan-300 rounded px-2.5 py-1.5 text-olive-900 focus:outline-none focus:border-olive-700"
+                      className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 sm:px-2.5 sm:py-1.5 text-base sm:text-xs text-olive-900 focus:outline-none focus:border-olive-700"
                     />
                   </div>
                   <div>
-                    <label className="block text-tan-600 mb-1 font-medium">2nd Client Last Name</label>
+                    <label className="block text-tan-600 mb-1 font-medium text-xs sm:text-xs">2nd Client Last Name</label>
                     <input
                       type="text"
                       placeholder={lastName || 'Last Name'}
                       value={secLastName}
                       onChange={(e) => setSecLastName(e.target.value)}
-                      className="w-full bg-cream border border-tan-300 rounded px-2.5 py-1.5 text-olive-900 focus:outline-none focus:border-olive-700"
+                      className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 sm:px-2.5 sm:py-1.5 text-base sm:text-xs text-olive-900 focus:outline-none focus:border-olive-700"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div>
-                    <label className="block text-tan-600 mb-1 font-medium">Phone</label>
+                    <label className="block text-tan-600 mb-1 font-medium text-xs sm:text-xs">Phone</label>
                     <input
                       type="tel"
                       placeholder="(512) 555-0200"
                       value={secPhone}
                       onChange={(e) => setSecPhone(e.target.value)}
-                      className="w-full bg-cream border border-tan-300 rounded px-2.5 py-1.5 text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+                      className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 sm:px-2.5 sm:py-1.5 text-base sm:text-xs text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
                     />
                   </div>
                   <div>
-                    <label className="block text-tan-600 mb-1 font-medium">Email</label>
+                    <label className="block text-tan-600 mb-1 font-medium text-xs sm:text-xs">Email</label>
                     <input
                       type="email"
                       placeholder="partner@gmail.com"
                       value={secEmail}
                       onChange={(e) => setSecEmail(e.target.value)}
-                      className="w-full bg-cream border border-tan-300 rounded px-2.5 py-1.5 text-olive-900 focus:outline-none focus:border-olive-700"
+                      className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 sm:px-2.5 sm:py-1.5 text-base sm:text-xs text-olive-900 focus:outline-none focus:border-olive-700"
                     />
                   </div>
                   <div>
-                    <label className="block text-tan-600 mb-1 font-medium">Relationship</label>
+                    <label className="block text-tan-600 mb-1 font-medium text-xs sm:text-xs">Relationship</label>
                     <select
                       value={secRelationship}
                       onChange={(e) => setSecRelationship(e.target.value)}
-                      className="w-full bg-cream border border-tan-300 rounded px-2 py-1.5 text-olive-900 focus:outline-none focus:border-olive-700"
+                      className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 sm:px-2 sm:py-1.5 text-base sm:text-xs text-olive-900 focus:outline-none focus:border-olive-700"
                     >
                       <option value="Spouse / Co-Buyer">Spouse / Co-Buyer</option>
                       <option value="Partner">Partner</option>
@@ -292,17 +294,17 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
 
           {/* Lead Details: Type, Priority, Stage, Source */}
           <div className="pt-2 border-t border-tan-100">
-            <span className="text-[11px] font-bold text-tan-500 uppercase tracking-wider block mb-2">
+            <span className="text-xs sm:text-[11px] font-bold text-tan-500 uppercase tracking-wider block mb-2.5">
               Lead Criteria & Pipeline
             </span>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-2.5">
               <div>
-                <label className="block text-olive-900 mb-1 font-semibold">Client Type</label>
+                <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">Client Type</label>
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value as ClientType)}
-                  className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 capitalize focus:outline-none focus:border-olive-700"
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 text-base sm:text-xs text-olive-900 capitalize focus:outline-none focus:border-olive-700"
                 >
                   <option value="buyer">Buyer</option>
                   <option value="seller">Seller</option>
@@ -312,11 +314,11 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
               </div>
 
               <div>
-                <label className="block text-olive-900 mb-1 font-semibold">Priority</label>
+                <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">Priority</label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as Priority)}
-                  className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 capitalize focus:outline-none focus:border-olive-700"
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 text-base sm:text-xs text-olive-900 capitalize focus:outline-none focus:border-olive-700"
                 >
                   <option value="hot">Hot (0-30d)</option>
                   <option value="warm">Warm (1-3mo)</option>
@@ -325,11 +327,11 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
               </div>
 
               <div>
-                <label className="block text-olive-900 mb-1 font-semibold">Stage</label>
+                <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">Stage</label>
                 <select
                   value={stage}
                   onChange={(e) => setStage(e.target.value as ClientStage)}
-                  className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 focus:outline-none focus:border-olive-700"
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 text-base sm:text-xs text-olive-900 focus:outline-none focus:border-olive-700"
                 >
                   <option value="new_lead">New Lead</option>
                   <option value="contacted">Contacted</option>
@@ -343,8 +345,8 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
           </div>
 
           {/* Linear Budget Range Slider with Dots */}
-          <div className="bg-tan-50 border border-tan-200 rounded-lg p-3.5 space-y-2">
-            <span className="text-[11px] font-bold text-olive-900 uppercase tracking-wider block">
+          <div className="bg-tan-50 border border-tan-200 rounded-xl sm:rounded-lg p-3.5 space-y-2">
+            <span className="text-xs sm:text-[11px] font-bold text-olive-900 uppercase tracking-wider block">
               Budget Range (Min – Max)
             </span>
             <BudgetRangeSlider
@@ -359,7 +361,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
 
           {/* Locations & Criteria */}
           <div>
-            <label className="block text-olive-900 mb-1 font-semibold">
+            <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
               Target Neighborhoods / Cities (comma-separated)
             </label>
             <input
@@ -367,12 +369,12 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
               placeholder="e.g. Irvine, Newport Beach, Laguna Beach"
               value={locationsInput}
               onChange={(e) => setLocationsInput(e.target.value)}
-              className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+              className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2.5 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
             />
           </div>
 
           <div>
-            <label className="block text-olive-900 mb-1 font-semibold">
+            <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
               The Reason for their move
             </label>
             <textarea
@@ -380,26 +382,26 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
               placeholder="e.g. Outgrowing current home, closer to schools or family, relocating for work..."
               value={criteriaNotes}
               onChange={(e) => setCriteriaNotes(e.target.value)}
-              className="w-full bg-cream border border-tan-300 rounded px-3 py-2 text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+              className="w-full bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2.5 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
             />
           </div>
 
           {/* Communication & Follow-Up Scheduling */}
           <div className="pt-2 border-t border-tan-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-olive-900 mb-1 font-semibold">
+              <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
                 Last Communication Date
               </label>
               <input
                 type="date"
                 value={lastContactedDate}
                 onChange={(e) => setLastContactedDate(e.target.value)}
-                className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+                className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 sm:px-2.5 text-base sm:text-xs text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
               />
             </div>
 
             <div>
-              <label className="block text-olive-900 mb-1 font-semibold">
+              <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
                 Next Follow-Up Date
               </label>
               <input
@@ -407,34 +409,34 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
                 required
                 value={nextFollowUpDate}
                 onChange={(e) => setNextFollowUpDate(e.target.value)}
-                className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+                className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 sm:px-2.5 text-base sm:text-xs text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
               />
             </div>
 
             <div>
-              <label className="block text-olive-900 mb-1 font-semibold">
+              <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
                 Follow-Up Task
               </label>
               <input
                 type="text"
                 value={nextFollowUpNote}
                 onChange={(e) => setNextFollowUpNote(e.target.value)}
-                className="w-full bg-cream border border-tan-300 rounded px-2.5 py-2 text-olive-900 focus:outline-none focus:border-olive-700"
+                className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 sm:px-2.5 text-base sm:text-xs text-olive-900 focus:outline-none focus:border-olive-700"
               />
             </div>
           </div>
 
-          <div className="pt-3 flex items-center justify-end gap-3 border-t border-tan-100">
+          <div className="pt-4 pb-4 sm:pb-0 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 border-t border-tan-100" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded text-tan-600 hover:text-olive-900 transition-colors cursor-pointer"
+              className="min-h-[46px] sm:min-h-0 px-4 py-2.5 sm:py-2 rounded-xl sm:rounded border border-tan-200 sm:border-0 text-tan-600 hover:text-olive-900 font-medium transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-olive-700 hover:bg-olive-800 text-cream font-semibold rounded transition-colors cursor-pointer"
+              className="min-h-[48px] sm:min-h-0 px-5 py-3 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream font-semibold rounded-xl sm:rounded transition-colors cursor-pointer"
             >
               Save Client to CRM
             </button>

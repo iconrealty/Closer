@@ -288,190 +288,293 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
     const isDueToday = status.isToday;
 
     return (
-      <div
-        key={client.id}
-        onMouseEnter={() => setHoveredClientId(client.id)}
-        onMouseLeave={() => {
-          setHoveredClientId(null);
-          if (snoozeMenuClientId === client.id) setSnoozeMenuClientId(null);
-        }}
-        onClick={() => {
-          if (client.isUnread) {
-            markAsRead(client.id);
-          }
-          onOpenClient(client);
-        }}
-        className={`group flex items-center gap-3 px-3 py-2 transition-colors cursor-pointer text-xs select-none relative ${
-          isSelected
-            ? 'bg-olive-50/80'
-            : isHovered
-            ? 'bg-tan-50'
-            : 'bg-cream'
-        }`}
-      >
-        {/* Left: Checkbox & Star */}
-        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={(e) => handleToggleSelectOne(client.id, e as any)}
-            className="w-3.5 h-3.5 rounded border-tan-300 accent-olive-700 focus:ring-0 cursor-pointer"
-          />
-          <button
-            type="button"
-            onClick={(e) => handleToggleStar(client, e)}
-            className="p-1 text-tan-300 hover:text-olive-700 transition-colors cursor-pointer"
-            title={isHot ? 'Hot' : 'Normal'}
-          >
-            <Star
-              className={`w-3.5 h-3.5 ${
-                isHot ? 'fill-olive-700 text-olive-700' : 'text-tan-300'
-              }`}
-            />
-          </button>
-        </div>
+      <div key={client.id} className={isSelected ? 'bg-olive-50/80' : 'bg-cream'}>
+        {/* Mobile Touch Card (< md) */}
+        <div
+          onClick={() => {
+            if (client.isUnread) {
+              markAsRead(client.id);
+            }
+            onOpenClient(client);
+          }}
+          className="md:hidden p-4 space-y-2.5 active:bg-tan-50 cursor-pointer select-none"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                onClick={(e) => handleToggleStar(client, e)}
+                className="min-w-[36px] min-h-[36px] -ml-1.5 flex items-center justify-center rounded-lg text-tan-400 cursor-pointer shrink-0"
+                title={isHot ? 'Hot' : 'Normal'}
+              >
+                <Star
+                  className={`w-4 h-4 ${
+                    isHot ? 'fill-olive-700 text-olive-700' : 'text-tan-300'
+                  }`}
+                />
+              </button>
 
-        {/* Client Name & Type */}
-        <div className="w-48 sm:w-56 shrink-0 truncate flex items-baseline gap-1.5">
-          <span className={`truncate text-olive-900 ${client.isUnread ? 'font-bold' : 'font-semibold'}`}>
-            {displayName}
-          </span>
-          {client.isUnread && (
-            <span className="text-[10px] font-semibold text-olive-700 shrink-0">
-              Unread
-            </span>
-          )}
-          <span className="text-[10px] text-tan-500 capitalize shrink-0">
-            {client.type === 'buyer_seller' ? 'buyer/seller' : client.type}
-          </span>
-        </div>
-
-        {/* Center: Stage / Status tag + Task Snippet */}
-        <div className="flex-1 min-w-0 flex items-center gap-2">
-          <span className="text-[11px] text-tan-600 shrink-0 font-medium">
-            {client.stage.replace('_', ' ')}
-          </span>
-
-          {propertyCount > 0 && (
-            <span
-              className="text-[11px] text-olive-700 tabular-nums font-semibold flex items-center gap-0.5 shrink-0"
-              title={`${propertyCount} properties to show`}
-            >
-              <Home className="w-3 h-3 text-olive-600" />
-              <span>{propertyCount}</span>
-            </span>
-          )}
-
-          {/* Snippet */}
-          <span className="text-tan-500 truncate text-[11px]">
-            {client.nextFollowUpNote || 'Follow-up scheduled'}
-          </span>
-        </div>
-
-        {/* Right Zone: Price Budget & Relative Date / Hover Toolbar */}
-        <div className="shrink-0 flex items-center justify-end min-w-[150px] relative">
-          {/* Static state */}
-          <div
-            className={`flex items-center gap-3 transition-opacity ${
-              isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'
-            }`}
-          >
-            <span className="text-olive-900 tabular-nums font-semibold text-xs hidden sm:inline">
-              {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
-            </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[15px] text-olive-900 truncate ${client.isUnread ? 'font-bold' : 'font-semibold'}`}>
+                    {displayName}
+                  </span>
+                  {client.isUnread && (
+                    <span className="w-2 h-2 rounded-full bg-olive-700 shrink-0" aria-label="Unread" />
+                  )}
+                </div>
+                <div className="text-xs text-tan-600 flex items-center gap-1.5 flex-wrap mt-0.5">
+                  <span className="capitalize">{client.stage.replace(/_/g, ' ')}</span>
+                  <span className="text-tan-300">·</span>
+                  <span className="font-semibold text-olive-900 tabular-nums">
+                    {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
+                  </span>
+                  {propertyCount > 0 && (
+                    <>
+                      <span className="text-tan-300">·</span>
+                      <span className="text-olive-700 font-semibold tabular-nums inline-flex items-center gap-1">
+                        <Home className="w-3 h-3" />
+                        {propertyCount}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <span
-              className={`text-xs tabular-nums text-right whitespace-nowrap ${
+              className={`text-xs tabular-nums text-right whitespace-nowrap shrink-0 pt-1 ${
                 isOverdue
                   ? 'text-rust-600 font-bold'
                   : isDueToday
                   ? 'text-olive-700 font-bold'
-                  : 'text-tan-500'
+                  : 'text-tan-500 font-medium'
               }`}
             >
               {getRelativeDaysLabel(client.nextFollowUpDate).label}
             </span>
           </div>
 
-          {/* Hover Action Toolbar */}
+          <p className="text-sm text-tan-600 line-clamp-2 leading-snug pl-8">
+            {client.nextFollowUpNote || client.criteriaNotes || 'Follow-up scheduled'}
+          </p>
+
           <div
-            className={`absolute right-0 flex items-center gap-0.5 transition-opacity ${
-              isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-            }`}
+            className="flex items-center gap-2 pl-8 pt-1"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={(e) => handleCall(client, e)}
-              title="Call"
-              className="p-1 text-tan-600 hover:text-olive-900 rounded hover:bg-tan-200/70 transition-colors cursor-pointer"
+              className="flex-1 min-h-[42px] px-2.5 bg-tan-100 active:bg-tan-200 text-olive-900 rounded-lg text-[13px] font-medium flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Phone className="w-3.5 h-3.5" />
+              <Phone className="w-4 h-4 text-tan-600" />
+              <span>Call</span>
             </button>
-
             <button
               type="button"
               onClick={(e) => handleSms(client, e)}
-              title="SMS"
-              className="p-1 text-tan-600 hover:text-olive-900 rounded hover:bg-tan-200/70 transition-colors cursor-pointer"
+              className="flex-1 min-h-[42px] px-2.5 bg-tan-100 active:bg-tan-200 text-olive-900 rounded-lg text-[13px] font-medium flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <MessageSquare className="w-3.5 h-3.5" />
+              <MessageSquare className="w-4 h-4 text-tan-600" />
+              <span>Text</span>
             </button>
-
-            <button
-              type="button"
-              onClick={(e) => handleEmail(client, e)}
-              title="Email"
-              className="p-1 text-tan-600 hover:text-olive-900 rounded hover:bg-tan-200/70 transition-colors cursor-pointer"
-            >
-              <Mail className="w-3.5 h-3.5" />
-            </button>
-
-            <div className="relative">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSnoozeMenuClientId(snoozeMenuClientId === client.id ? null : client.id);
-                }}
-                title="Snooze"
-                className="p-1 text-tan-600 hover:text-olive-900 rounded hover:bg-tan-200/70 transition-colors cursor-pointer"
-              >
-                <Clock className="w-3.5 h-3.5" />
-              </button>
-
-              {snoozeMenuClientId === client.id && (
-                <div className="absolute right-0 top-full mt-1 w-28 bg-cream border border-tan-200 rounded-md shadow-md p-1 z-50 text-[11px]">
-                  <button
-                    onClick={(e) => handleSnooze(client, 1, e)}
-                    className="w-full text-left px-2 py-1 hover:bg-tan-100 rounded text-olive-900 cursor-pointer"
-                  >
-                    +1 Day
-                  </button>
-                  <button
-                    onClick={(e) => handleSnooze(client, 3, e)}
-                    className="w-full text-left px-2 py-1 hover:bg-tan-100 rounded text-olive-900 cursor-pointer"
-                  >
-                    +3 Days
-                  </button>
-                  <button
-                    onClick={(e) => handleSnooze(client, 7, e)}
-                    className="w-full text-left px-2 py-1 hover:bg-tan-100 rounded text-olive-900 cursor-pointer"
-                  >
-                    +1 Week
-                  </button>
-                </div>
-              )}
-            </div>
-
             <button
               type="button"
               onClick={(e) => handleComplete(client, e)}
-              title="Mark Done"
-              className="p-1 text-tan-600 hover:text-olive-700 rounded hover:bg-olive-100 transition-colors cursor-pointer"
+              className="flex-1 min-h-[42px] px-2.5 bg-olive-50 active:bg-olive-100 border border-olive-200 text-olive-800 rounded-lg text-[13px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Check className="w-3.5 h-3.5 stroke-[2]" />
+              <Check className="w-4 h-4" />
+              <span>Done</span>
             </button>
+          </div>
+        </div>
+
+        {/* Desktop Row (>= md) */}
+        <div
+          onMouseEnter={() => setHoveredClientId(client.id)}
+          onMouseLeave={() => {
+            setHoveredClientId(null);
+            if (snoozeMenuClientId === client.id) setSnoozeMenuClientId(null);
+          }}
+          onClick={() => {
+            if (client.isUnread) {
+              markAsRead(client.id);
+            }
+            onOpenClient(client);
+          }}
+          className={`hidden md:flex group items-center gap-3 px-3 py-2 transition-colors cursor-pointer text-xs select-none relative ${
+            isSelected
+              ? 'bg-olive-50/80'
+              : isHovered
+              ? 'bg-tan-50'
+              : 'bg-cream'
+          }`}
+        >
+          {/* Left: Checkbox & Star */}
+          <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => handleToggleSelectOne(client.id, e as any)}
+              className="w-3.5 h-3.5 rounded border-tan-300 accent-olive-700 focus:ring-0 cursor-pointer"
+            />
+            <button
+              type="button"
+              onClick={(e) => handleToggleStar(client, e)}
+              className="p-1 text-tan-300 hover:text-olive-700 transition-colors cursor-pointer"
+              title={isHot ? 'Hot' : 'Normal'}
+            >
+              <Star
+                className={`w-3.5 h-3.5 ${
+                  isHot ? 'fill-olive-700 text-olive-700' : 'text-tan-300'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Client Name & Type */}
+          <div className="w-48 sm:w-56 shrink-0 truncate flex items-baseline gap-1.5">
+            <span className={`truncate text-olive-900 ${client.isUnread ? 'font-bold' : 'font-semibold'}`}>
+              {displayName}
+            </span>
+            {client.isUnread && (
+              <span className="text-[10px] font-semibold text-olive-700 shrink-0">
+                Unread
+              </span>
+            )}
+            <span className="text-[10px] text-tan-500 capitalize shrink-0">
+              {client.type === 'buyer_seller' ? 'buyer/seller' : client.type}
+            </span>
+          </div>
+
+          {/* Center: Stage / Status tag + Task Snippet */}
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <span className="text-[11px] text-tan-600 shrink-0 font-medium">
+              {client.stage.replace('_', ' ')}
+            </span>
+
+            {propertyCount > 0 && (
+              <span
+                className="text-[11px] text-olive-700 tabular-nums font-semibold flex items-center gap-0.5 shrink-0"
+                title={`${propertyCount} properties to show`}
+              >
+                <Home className="w-3 h-3 text-olive-600" />
+                <span>{propertyCount}</span>
+              </span>
+            )}
+
+            {/* Snippet */}
+            <span className="text-tan-500 truncate text-[11px]">
+              {client.nextFollowUpNote || 'Follow-up scheduled'}
+            </span>
+          </div>
+
+          {/* Right Zone: Price Budget & Relative Date / Hover Toolbar */}
+          <div className="shrink-0 flex items-center justify-end min-w-[150px] relative">
+            {/* Static state */}
+            <div
+              className={`flex items-center gap-3 transition-opacity ${
+                isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+            >
+              <span className="text-olive-900 tabular-nums font-semibold text-xs hidden sm:inline">
+                {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
+              </span>
+
+              <span
+                className={`text-xs tabular-nums text-right whitespace-nowrap ${
+                  isOverdue
+                    ? 'text-rust-600 font-bold'
+                    : isDueToday
+                    ? 'text-olive-700 font-bold'
+                    : 'text-tan-500'
+                }`}
+              >
+                {getRelativeDaysLabel(client.nextFollowUpDate).label}
+              </span>
+            </div>
+
+            {/* Hover Action Toolbar */}
+            <div
+              className={`absolute right-0 flex items-center gap-0.5 transition-opacity ${
+                isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={(e) => handleCall(client, e)}
+                title="Call"
+                className="p-1 text-tan-600 hover:text-olive-900 rounded hover:bg-tan-200/70 transition-colors cursor-pointer"
+              >
+                <Phone className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => handleSms(client, e)}
+                title="SMS"
+                className="p-1 text-tan-600 hover:text-olive-900 rounded hover:bg-tan-200/70 transition-colors cursor-pointer"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => handleEmail(client, e)}
+                title="Email"
+                className="p-1 text-tan-600 hover:text-olive-900 rounded hover:bg-tan-200/70 transition-colors cursor-pointer"
+              >
+                <Mail className="w-3.5 h-3.5" />
+              </button>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSnoozeMenuClientId(snoozeMenuClientId === client.id ? null : client.id);
+                  }}
+                  title="Snooze"
+                  className="p-1 text-tan-600 hover:text-olive-900 rounded hover:bg-tan-200/70 transition-colors cursor-pointer"
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                </button>
+
+                {snoozeMenuClientId === client.id && (
+                  <div className="absolute right-0 top-full mt-1 w-28 bg-cream border border-tan-200 rounded-md shadow-md p-1 z-50 text-[11px]">
+                    <button
+                      onClick={(e) => handleSnooze(client, 1, e)}
+                      className="w-full text-left px-2 py-1 hover:bg-tan-100 rounded text-olive-900 cursor-pointer"
+                    >
+                      +1 Day
+                    </button>
+                    <button
+                      onClick={(e) => handleSnooze(client, 3, e)}
+                      className="w-full text-left px-2 py-1 hover:bg-tan-100 rounded text-olive-900 cursor-pointer"
+                    >
+                      +3 Days
+                    </button>
+                    <button
+                      onClick={(e) => handleSnooze(client, 7, e)}
+                      className="w-full text-left px-2 py-1 hover:bg-tan-100 rounded text-olive-900 cursor-pointer"
+                    >
+                      +1 Week
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => handleComplete(client, e)}
+                title="Mark Done"
+                className="p-1 text-tan-600 hover:text-olive-700 rounded hover:bg-olive-100 transition-colors cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5 stroke-[2]" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -479,15 +582,15 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-3rem)] bg-cream overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 bg-cream overflow-hidden">
       {/* 1. Minimal Header Bar */}
-      <div className="h-11 border-b border-tan-200 px-3 sm:px-4 flex items-center justify-between gap-2 shrink-0 bg-cream">
+      <div className="min-h-[48px] md:h-11 border-b border-tan-200 px-3.5 sm:px-4 flex items-center justify-between gap-2 shrink-0 bg-cream">
         <div className="flex items-center gap-3">
           <input
             type="checkbox"
             checked={sortedClients.length > 0 && selectedIds.size === sortedClients.length}
             onChange={handleSelectAll}
-            className="w-3.5 h-3.5 rounded border-tan-300 accent-olive-700 focus:ring-0 cursor-pointer"
+            className="hidden md:block w-3.5 h-3.5 rounded border-tan-300 accent-olive-700 focus:ring-0 cursor-pointer"
             title="Select all"
           />
 
@@ -519,10 +622,10 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-olive-900">
+              <span className="text-base md:text-xs font-bold md:font-semibold text-olive-900">
                 {folderTitles[selectedFolder] || 'All inboxes'}
               </span>
-              <span className="text-[11px] text-tan-500 tabular-nums">
+              <span className="text-sm md:text-[11px] text-tan-500 tabular-nums">
                 ({sortedClients.length})
               </span>
             </div>
@@ -530,9 +633,9 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
         </div>
 
         {/* Right side: Sort */}
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2 text-sm md:text-xs">
           {selectedFolder === 'all_inbox' && (
-            <div className="flex items-center text-tan-500 mr-1">
+            <div className="hidden md:flex items-center text-tan-500 mr-1">
               <button
                 type="button"
                 onClick={() => setAllInboxLayout('stream')}
@@ -559,7 +662,7 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-transparent border-0 text-xs text-tan-600 focus:outline-none cursor-pointer"
+            className="bg-transparent border-0 text-sm md:text-xs font-medium text-tan-600 focus:outline-none cursor-pointer min-h-[40px] md:min-h-0"
           >
             <option value="urgency">Sort: Urgency</option>
             <option value="date">Sort: Next Due</option>
@@ -571,24 +674,24 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
 
       {/* 2. Minimal Category Filter Bar in All Inboxes */}
       {selectedFolder === 'all_inbox' && (
-        <div className="flex items-center border-b border-tan-200 px-3 bg-cream gap-4 text-xs select-none overflow-x-auto no-scrollbar">
+        <div className="flex items-center border-b border-tan-200 px-3.5 sm:px-3 bg-cream gap-5 sm:gap-4 text-sm md:text-xs select-none overflow-x-auto no-scrollbar shrink-0">
           <button
             type="button"
             onClick={() => setAllInboxTab('all')}
-            className={`py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+            className={`min-h-[44px] md:min-h-0 py-2.5 md:py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               allInboxTab === 'all'
                 ? 'border-olive-700 text-olive-900 font-semibold'
                 : 'border-transparent text-tan-500 hover:text-olive-900'
             }`}
           >
             <span>All</span>
-            <span className="text-[11px] tabular-nums font-semibold text-tan-500">{tabCounts.all}</span>
+            <span className="text-xs md:text-[11px] tabular-nums font-semibold text-tan-500">{tabCounts.all}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setAllInboxTab('catch_up')}
-            className={`py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+            className={`min-h-[44px] md:min-h-0 py-2.5 md:py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               allInboxTab === 'catch_up'
                 ? 'border-olive-700 text-olive-900 font-semibold'
                 : 'border-transparent text-tan-500 hover:text-olive-900'
@@ -596,7 +699,7 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           >
             <span>Catch Up</span>
             {tabCounts.catch_up > 0 && (
-              <span className="text-[11px] tabular-nums font-semibold text-rust-600">
+              <span className="text-xs md:text-[11px] tabular-nums font-semibold text-rust-600">
                 {tabCounts.catch_up}
               </span>
             )}
@@ -605,7 +708,7 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           <button
             type="button"
             onClick={() => setAllInboxTab('today')}
-            className={`py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+            className={`min-h-[44px] md:min-h-0 py-2.5 md:py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               allInboxTab === 'today'
                 ? 'border-olive-700 text-olive-900 font-semibold'
                 : 'border-transparent text-tan-500 hover:text-olive-900'
@@ -613,7 +716,7 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           >
             <span>Today</span>
             {tabCounts.today > 0 && (
-              <span className="text-[11px] tabular-nums font-semibold text-olive-700">
+              <span className="text-xs md:text-[11px] tabular-nums font-semibold text-olive-700">
                 {tabCounts.today}
               </span>
             )}
@@ -622,7 +725,7 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           <button
             type="button"
             onClick={() => setAllInboxTab('showings')}
-            className={`py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+            className={`min-h-[44px] md:min-h-0 py-2.5 md:py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               allInboxTab === 'showings'
                 ? 'border-olive-700 text-olive-900 font-semibold'
                 : 'border-transparent text-tan-500 hover:text-olive-900'
@@ -630,14 +733,14 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           >
             <span>Showings</span>
             {tabCounts.showings > 0 && (
-              <span className="text-[11px] tabular-nums font-semibold text-tan-500">{tabCounts.showings}</span>
+              <span className="text-xs md:text-[11px] tabular-nums font-semibold text-tan-500">{tabCounts.showings}</span>
             )}
           </button>
 
           <button
             type="button"
             onClick={() => setAllInboxTab('contract')}
-            className={`py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+            className={`min-h-[44px] md:min-h-0 py-2.5 md:py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               allInboxTab === 'contract'
                 ? 'border-olive-700 text-olive-900 font-semibold'
                 : 'border-transparent text-tan-500 hover:text-olive-900'
@@ -645,14 +748,14 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           >
             <span>Under Contract</span>
             {tabCounts.contract > 0 && (
-              <span className="text-[11px] tabular-nums font-semibold text-tan-500">{tabCounts.contract}</span>
+              <span className="text-xs md:text-[11px] tabular-nums font-semibold text-tan-500">{tabCounts.contract}</span>
             )}
           </button>
 
           <button
             type="button"
             onClick={() => setAllInboxTab('new')}
-            className={`py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+            className={`min-h-[44px] md:min-h-0 py-2.5 md:py-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               allInboxTab === 'new'
                 ? 'border-olive-700 text-olive-900 font-semibold'
                 : 'border-transparent text-tan-500 hover:text-olive-900'
@@ -660,16 +763,16 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           >
             <span>New Leads</span>
             {tabCounts.new > 0 && (
-              <span className="text-[11px] tabular-nums font-semibold text-tan-500">{tabCounts.new}</span>
+              <span className="text-xs md:text-[11px] tabular-nums font-semibold text-tan-500">{tabCounts.new}</span>
             )}
           </button>
         </div>
       )}
 
       {/* 3. Thread List */}
-      <div className="flex-1 overflow-y-auto divide-y divide-tan-100">
+      <div className="flex-1 overflow-y-auto divide-y divide-tan-200 md:divide-tan-100 pb-28 md:pb-0">
         {sortedClients.length === 0 ? (
-          <div className="p-8 text-center text-xs text-tan-500">
+          <div className="p-8 text-center text-sm md:text-xs text-tan-500">
             {searchQuery ? `No leads matching "${searchQuery}"` : 'No leads in this view'}
           </div>
         ) : selectedFolder === 'all_inbox' && allInboxLayout === 'sections' && allInboxTab === 'all' ? (
@@ -682,17 +785,17 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
                     onClick={() =>
                       setCollapsedSections((prev) => ({ ...prev, [section.id]: !prev[section.id] }))
                     }
-                    className="px-3 py-1.5 bg-tan-50 border-b border-tan-200 flex items-center justify-between cursor-pointer select-none text-xs text-tan-600"
+                    className="px-3.5 sm:px-3 py-2 sm:py-1.5 bg-tan-50 border-b border-tan-200 flex items-center justify-between cursor-pointer select-none text-sm md:text-xs text-tan-600"
                   >
                     <div className="flex items-center gap-1.5 font-semibold text-olive-900">
                       {isCollapsed ? (
-                        <ChevronRight className="w-3.5 h-3.5 text-tan-500" />
+                        <ChevronRight className="w-4 h-4 md:w-3.5 md:h-3.5 text-tan-500" />
                       ) : (
-                        <ChevronDown className="w-3.5 h-3.5 text-tan-500" />
+                        <ChevronDown className="w-4 h-4 md:w-3.5 md:h-3.5 text-tan-500" />
                       )}
                       <span>{section.title}</span>
                     </div>
-                    <span className="text-[10px] tabular-nums text-tan-500">
+                    <span className="text-xs md:text-[10px] tabular-nums text-tan-500">
                       {section.clients.length}
                     </span>
                   </div>
@@ -710,8 +813,8 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
         )}
       </div>
 
-      {/* 4. Minimalist Footer */}
-      <div className="px-3 py-1.5 border-t border-tan-200 text-[11px] text-tan-500 flex items-center justify-between bg-cream tabular-nums">
+      {/* 4. Minimalist Footer (Desktop) */}
+      <div className="hidden md:flex px-3 py-1.5 border-t border-tan-200 text-[11px] text-tan-500 items-center justify-between bg-cream tabular-nums shrink-0">
         <span>{sortedClients.length} leads</span>
       </div>
     </div>

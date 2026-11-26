@@ -104,10 +104,9 @@ export const buildZillowSearchUrl = (criteria: PropertySearchCriteria): string =
     filterState.baths = { min: criteria.bathsMin };
   }
 
-  // 4. Square Footage
-  if (criteria.minSqft && criteria.minSqft > 0) {
-    filterState.sqft = { min: criteria.minSqft };
-  }
+  // 4. Square Footage (default 500 sqft)
+  const effectiveMinSqft = criteria.minSqft && criteria.minSqft > 0 ? criteria.minSqft : 500;
+  filterState.sqft = { min: effectiveMinSqft };
 
   // 5. Property Types
   if (criteria.propertyTypes && criteria.propertyTypes.length > 0) {
@@ -196,9 +195,8 @@ export const buildRedfinSearchUrl = (criteria: PropertySearchCriteria): string =
   if (criteria.bathsMin && criteria.bathsMin > 0) {
     filters.push(`min-baths=${criteria.bathsMin}`);
   }
-  if (criteria.minSqft && criteria.minSqft > 0) {
-    filters.push(`min-sqft=${criteria.minSqft}`);
-  }
+  const effectiveMinSqft = criteria.minSqft && criteria.minSqft > 0 ? criteria.minSqft : 500;
+  filters.push(`min-sqft=${effectiveMinSqft}`);
 
   if (criteria.propertyTypes && criteria.propertyTypes.length > 0) {
     const redfinTypes: string[] = [];
@@ -304,9 +302,8 @@ export const buildChatGptSearchUrl = (criteria: PropertySearchCriteria): string 
   if (criteria.bathsMin && criteria.bathsMin > 0) {
     details.push(`${criteria.bathsMin}+ baths`);
   }
-  if (criteria.minSqft && criteria.minSqft > 0) {
-    details.push(`${criteria.minSqft}+ sq ft`);
-  }
+  const effectiveMinSqft = criteria.minSqft && criteria.minSqft > 0 ? criteria.minSqft : 500;
+  details.push(`${effectiveMinSqft}+ sq ft`);
   if (criteria.stories && criteria.stories !== 'Any') {
     details.push(criteria.stories);
   }

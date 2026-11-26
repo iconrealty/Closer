@@ -54,22 +54,22 @@ export const ScriptsView: React.FC<ScriptsViewProps> = ({ onOpenCompose }) => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-1 sm:px-4 py-2 sm:py-4 space-y-5 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-olive-900">Battle-Tested Follow-Up Scripts</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-olive-900">Battle-Tested Follow-Up Scripts</h1>
           <p className="text-sm text-tan-600 mt-1">
-            Proven real estate messaging that gets 60%+ response rates. Zero robotic boilerplate.
+            Proven real estate messaging that gets 60%+ response rates.
           </p>
         </div>
 
         {/* Dynamic Client Selector */}
-        <div className="flex items-center gap-2 bg-cream border border-tan-200 rounded-lg p-2 text-xs">
-          <span className="text-tan-600 font-medium">Personalize for:</span>
+        <div className="flex items-center gap-2 bg-cream border border-tan-200 rounded-xl sm:rounded-lg p-2.5 sm:p-2 text-sm sm:text-xs">
+          <span className="text-tan-600 font-medium whitespace-nowrap">Personalize:</span>
           <select
             value={selectedClientId}
             onChange={(e) => setSelectedClientId(e.target.value)}
-            className="bg-tan-50 border border-tan-200 rounded px-2.5 py-1 text-olive-900 font-semibold focus:outline-none focus:border-olive-700 cursor-pointer"
+            className="flex-1 sm:flex-initial min-h-[40px] sm:min-h-0 bg-tan-50 border border-tan-200 rounded-lg sm:rounded px-2.5 py-1.5 sm:py-1 text-base sm:text-xs text-olive-900 font-semibold focus:outline-none focus:border-olive-700 cursor-pointer"
           >
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
@@ -89,50 +89,50 @@ export const ScriptsView: React.FC<ScriptsViewProps> = ({ onOpenCompose }) => {
           return (
             <div
               key={script.id}
-              className="bg-cream border border-tan-200 rounded-lg p-5 flex flex-col justify-between gap-4"
+              className="bg-cream border border-tan-200 rounded-xl sm:rounded-lg p-4 sm:p-5 flex flex-col justify-between gap-4"
             >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-olive-900">{script.title}</h3>
-                  <span className="text-xs text-tan-500">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-base sm:text-sm font-bold text-olive-900">{script.title}</h3>
+                  <span className="text-xs text-tan-500 shrink-0">
                     {script.category}
                   </span>
                 </div>
 
-                <div className="bg-tan-50 border border-tan-200 rounded-md p-3 text-xs text-olive-900 font-sans whitespace-pre-wrap leading-relaxed select-all">
+                <div className="bg-tan-50 border border-tan-200 rounded-lg sm:rounded-md p-3.5 sm:p-3 text-sm sm:text-xs text-olive-900 font-sans whitespace-pre-wrap leading-relaxed select-all">
                   {filledText}
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-2 border-t border-tan-100 text-xs">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-tan-100 text-sm sm:text-xs">
+                <div className="flex items-center gap-2 flex-1 sm:flex-initial">
                   <button
                     onClick={() => handleSendSms(script)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded transition-colors font-medium cursor-pointer"
+                    className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded-lg sm:rounded transition-colors font-medium cursor-pointer"
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-tan-600" />
-                    <span>Send SMS</span>
+                    <MessageSquare className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-tan-600" />
+                    <span>SMS</span>
                   </button>
 
                   <button
                     onClick={() => handleSendEmail(script)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded transition-colors font-medium cursor-pointer"
+                    className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded-lg sm:rounded transition-colors font-medium cursor-pointer"
                   >
-                    <Mail className="w-3.5 h-3.5 text-tan-600" />
-                    <span>Send Email</span>
+                    <Mail className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-tan-600" />
+                    <span>Email</span>
                   </button>
                 </div>
 
                 <button
                   onClick={() => handleCopy(script)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors font-semibold cursor-pointer ${
+                  className={`min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 sm:px-3 py-2 sm:py-1.5 rounded-lg sm:rounded transition-colors font-semibold cursor-pointer ${
                     isCopied
                       ? 'bg-olive-700 text-cream'
                       : 'bg-olive-50 text-olive-800 border border-olive-200 hover:bg-olive-100'
                   }`}
                 >
-                  {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {isCopied ? <Check className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> : <Copy className="w-4 h-4 sm:w-3.5 sm:h-3.5" />}
                   <span>{isCopied ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
