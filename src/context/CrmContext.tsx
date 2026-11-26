@@ -8,6 +8,7 @@ import {
   formatClientDisplayName,
   SentProperty,
   SentPropertyStatus,
+  normalizeLeadSource,
 } from '../types/crm';
 import { INITIAL_CLIENTS } from '../data/initialData';
 
@@ -111,6 +112,7 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (c.isUnread === undefined) {
               c.isUnread = c.stage === 'new_lead';
             }
+            c.source = normalizeLeadSource(c.source);
             return c;
           });
           if (!hasMigratedMinSqft) {
@@ -609,6 +611,7 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             c.lastName = c.lastName || parts.slice(1).join(' ') || '';
           }
           c.name = formatClientDisplayName(c);
+          c.source = normalizeLeadSource(c.source);
           return c;
         });
         setClients(validated);

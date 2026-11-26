@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCrm } from '../../context/CrmContext';
-import { ClientType, ClientStage, Priority, LeadSource, SecondaryContact } from '../../types/crm';
+import { ClientType, ClientStage, Priority, LeadSource, LEAD_SOURCE_OPTIONS, SecondaryContact } from '../../types/crm';
 import { BudgetRangeSlider } from '../common/BudgetRangeSlider';
 import { X, UserPlus, Users, Trash2 } from 'lucide-react';
 
@@ -30,7 +30,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
   const [type, setType] = useState<ClientType>('buyer');
   const [stage, setStage] = useState<ClientStage>('new_lead');
   const [priority, setPriority] = useState<Priority>('hot');
-  const [source, setSource] = useState<LeadSource>('Sphere of Influence');
+  const [source, setSource] = useState<LeadSource>('Self');
   const [targetPriceMin, setTargetPriceMin] = useState<number>(400000);
   const [targetPriceMax, setTargetPriceMax] = useState<number>(600000);
   const [locationsInput, setLocationsInput] = useState('');
@@ -298,7 +298,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
               Lead Criteria & Pipeline
             </span>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-2.5">
               <div>
                 <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">Client Type</label>
                 <select
@@ -339,6 +339,21 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
                   <option value="under_contract">Under Contract</option>
                   <option value="closed">Closed</option>
                   <option value="long_term_nurture">Nurture</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">Source</label>
+                <select
+                  value={source}
+                  onChange={(e) => setSource(e.target.value as LeadSource)}
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 text-base sm:text-xs text-olive-900 focus:outline-none focus:border-olive-700"
+                >
+                  {LEAD_SOURCE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

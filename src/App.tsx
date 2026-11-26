@@ -8,7 +8,7 @@ import { DashboardWorkspace } from './components/dashboard/DashboardWorkspace';
 import { PipelineBoard } from './components/pipeline/PipelineBoard';
 import { ContactsTable } from './components/contacts/ContactsTable';
 import { ScriptsView } from './components/scripts/ScriptsView';
-import { ClientDetailModal } from './components/modals/ClientDetailModal';
+import { ClientDetailPage } from './components/clients/ClientDetailPage';
 import { AddClientModal } from './components/modals/AddClientModal';
 import { QuickCommModal } from './components/modals/QuickCommModal';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
@@ -77,7 +77,10 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
       <GmailNavbar
         googleUser={googleUser}
         onToggleSidebar={() => setIsSidebarOpenMobile((prev) => !prev)}
-        onGoDashboard={() => setSelectedFolder('dashboard')}
+        onGoDashboard={() => {
+          setSelectedClient(null);
+          setSelectedFolder('dashboard');
+        }}
         onReturnToLanding={onReturnToLanding}
       />
 
@@ -100,6 +103,7 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
           <GmailSidebar
             selectedFolder={selectedFolder}
             onSelectFolder={(folder) => {
+              setSelectedClient(null);
               setSelectedFolder(folder);
               setIsSidebarOpenMobile(false);
             }}
@@ -111,73 +115,83 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
           />
         </div>
 
-        {/* CENTER COLUMN: Main Content Area */}
+        {/* CENTER / RIGHT PAGE: Main Workspace or Selected Client Page */}
         <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-cream overflow-hidden">
-          {/* 0. Main Tabbed Dashboard Workspace */}
-          {(selectedFolder === 'dashboard' ||
-            selectedFolder === 'follow_through' ||
-            selectedFolder === 'little_moments') && (
-            <DashboardWorkspace
-              activeTab={selectedFolder}
-              onChangeTab={(tab) => setSelectedFolder(tab)}
-              onOpenClient={(client) => setSelectedClient(client)}
+          {selectedClient ? (
+            <ClientDetailPage
+              client={selectedClient}
+              onBack={() => setSelectedClient(null)}
               onOpenCompose={handleOpenCompose}
             />
-          )}
+          ) : (
+            <>
+              {/* 0. Main Tabbed Dashboard Workspace */}
+              {(selectedFolder === 'dashboard' ||
+                selectedFolder === 'follow_through' ||
+                selectedFolder === 'little_moments') && (
+                <DashboardWorkspace
+                  activeTab={selectedFolder}
+                  onChangeTab={(tab) => setSelectedFolder(tab)}
+                  onOpenClient={(client) => setSelectedClient(client)}
+                  onOpenCompose={handleOpenCompose}
+                />
+              )}
 
-          {/* A. Inbox Folders (All Inboxes Beta, Action Queue, Overdue, Today, Stages) */}
-          {(selectedFolder === 'all_inbox' ||
-            selectedFolder === 'inbox' ||
-            selectedFolder === 'overdue' ||
-            selectedFolder === 'today' ||
-            selectedFolder === 'active_showing' ||
-            selectedFolder === 'under_contract' ||
-            selectedFolder === 'new_lead' ||
-            selectedFolder === 'nurture' ||
-            selectedFolder === 'closed') && (
-            <GmailClientList
-              selectedFolder={selectedFolder}
-              priorityFilter={priorityFilter}
-              typeFilter={typeFilter}
-              onOpenClient={(client) => setSelectedClient(client)}
-              onOpenCompose={handleOpenCompose}
-            />
-          )}
+              {/* A. Inbox Folders (All Inboxes Beta, Action Queue, Overdue, Today, Stages) */}
+              {(selectedFolder === 'all_inbox' ||
+                selectedFolder === 'inbox' ||
+                selectedFolder === 'overdue' ||
+                selectedFolder === 'today' ||
+                selectedFolder === 'active_showing' ||
+                selectedFolder === 'under_contract' ||
+                selectedFolder === 'new_lead' ||
+                selectedFolder === 'nurture' ||
+                selectedFolder === 'closed') && (
+                <GmailClientList
+                  selectedFolder={selectedFolder}
+                  priorityFilter={priorityFilter}
+                  typeFilter={typeFilter}
+                  onOpenClient={(client) => setSelectedClient(client)}
+                  onOpenCompose={handleOpenCompose}
+                />
+              )}
 
-          {/* B. All Contacts Directory */}
-          {selectedFolder === 'all_contacts' && (
-            <div className="flex-1 overflow-y-auto pb-28 md:pb-0">
-              <ContactsTable
-                onOpenClient={(client) => setSelectedClient(client)}
-                onOpenCompose={handleOpenCompose}
-              />
-            </div>
-          )}
+              {/* B. All Contacts Directory */}
+              {selectedFolder === 'all_contacts' && (
+                <div className="flex-1 overflow-y-auto pb-28 md:pb-0">
+                  <ContactsTable
+                    onOpenClient={(client) => setSelectedClient(client)}
+                    onOpenCompose={handleOpenCompose}
+                  />
+                </div>
+              )}
 
-          {/* C. Properties to Show (Showing tour hub with 0-token import) */}
-          {selectedFolder === 'properties_to_show' && (
-            <AllPropertiesToPageView
-              onOpenClient={(client) => setSelectedClient(client)}
-              onOpenCompose={handleOpenCompose}
-            />
-          )}
+              {/* C. Properties to Show (Showing tour hub with 0-token import) */}
+              {selectedFolder === 'properties_to_show' && (
+                <AllPropertiesToPageView
+                  onOpenClient={(client) => setSelectedClient(client)}
+                  onOpenCompose={handleOpenCompose}
+                />
+              )}
 
-          {/* D. Pipeline Board */}
-          {selectedFolder === 'pipeline_board' && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-6">
-              <PipelineBoard
-                onOpenClient={(client) => setSelectedClient(client)}
-              />
-            </div>
-          )}
+              {/* D. Pipeline Board */}
+              {selectedFolder === 'pipeline_board' && (
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-6">
+                  <PipelineBoard
+                    onOpenClient={(client) => setSelectedClient(client)}
+                  />
+                </div>
+              )}
 
-          {/* E. Quick Scripts */}
-          {selectedFolder === 'scripts' && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-6">
-              <ScriptsView
-                onOpenCompose={handleOpenCompose}
-              />
-            </div>
+              {/* E. Quick Scripts */}
+              {selectedFolder === 'scripts' && (
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-6">
+                  <ScriptsView
+                    onOpenCompose={handleOpenCompose}
+                  />
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>
@@ -186,22 +200,16 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
       <MobileBottomNav
         googleUser={googleUser}
         selectedFolder={selectedFolder}
-        onSelectFolder={(folder) => setSelectedFolder(folder)}
+        onSelectFolder={(folder) => {
+          setSelectedClient(null);
+          setSelectedFolder(folder);
+        }}
         selectedPriorityFilter={priorityFilter}
         onSelectPriorityFilter={setPriorityFilter}
         selectedTypeFilter={typeFilter}
         onSelectTypeFilter={setTypeFilter}
         onReturnToLanding={onReturnToLanding}
       />
-
-      {/* Client Detail Modal */}
-      {selectedClient && (
-        <ClientDetailModal
-          client={selectedClient}
-          onClose={() => setSelectedClient(null)}
-          onOpenCompose={handleOpenCompose}
-        />
-      )}
 
       {/* Quick Add Client Modal */}
       {isAddModalOpen && (

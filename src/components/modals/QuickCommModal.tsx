@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useCrm } from '../../context/CrmContext';
 import { Client, SentProperty } from '../../types/crm';
-import { X, Send, Copy, Check, MessageSquare, Mail, User, Home, Calendar } from 'lucide-react';
+import { X, Send, Copy, Check, MessageSquare, Mail, User, Home, Calendar, Phone } from 'lucide-react';
 
 interface QuickCommModalProps {
   client: Client;
@@ -201,6 +201,19 @@ export const QuickCommModal: React.FC<QuickCommModalProps> = ({
       )}&body=${encodeURIComponent(message)}`;
     }
 
+    onClose();
+  };
+
+  const handleCallAndLog = () => {
+    const targetPhone = activeContact.phone || client.phone;
+    logActivity(
+      client.id,
+      'call',
+      `Call to ${activeContact.name} (${activeContact.relationship})`,
+      undefined,
+      'Completed'
+    );
+    window.location.href = `tel:${targetPhone.replace(/[^0-9+]/g, '')}`;
     onClose();
   };
 
@@ -427,6 +440,17 @@ export const QuickCommModal: React.FC<QuickCommModalProps> = ({
             >
               Cancel
             </button>
+
+            {mode === 'sms' && (
+              <button
+                type="button"
+                onClick={handleCallAndLog}
+                className="min-h-[48px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-3 sm:px-3.5 sm:py-2 bg-cream hover:bg-tan-100 border border-tan-300 text-olive-900 font-semibold rounded-xl sm:rounded-lg transition-colors cursor-pointer"
+              >
+                <Phone className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-olive-700" />
+                <span>Call</span>
+              </button>
+            )}
 
             <button
               type="button"

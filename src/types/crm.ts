@@ -10,14 +10,38 @@ export type ClientType = 'buyer' | 'seller' | 'buyer_seller' | 'investor';
 
 export type Priority = 'hot' | 'warm' | 'cold';
 
-export type LeadSource =
-  | 'Zillow / Portal'
-  | 'Sphere of Influence'
-  | 'Open House'
-  | 'Past Client Referral'
-  | 'Direct Call / Sign'
-  | 'Social Media'
-  | 'Website Inbound';
+export const LEAD_SOURCE_OPTIONS = [
+  'Tiktok',
+  'IG',
+  'Self',
+  'Zillow',
+  'Facebook',
+  'Other',
+] as const;
+
+export type LeadSource = (typeof LEAD_SOURCE_OPTIONS)[number];
+
+export function normalizeLeadSource(raw?: string): LeadSource {
+  if (!raw) return 'Other';
+  const trimmed = raw.trim();
+  if ((LEAD_SOURCE_OPTIONS as readonly string[]).includes(trimmed)) {
+    return trimmed as LeadSource;
+  }
+  const lower = trimmed.toLowerCase();
+  if (lower.includes('tiktok')) return 'Tiktok';
+  if (lower === 'ig' || lower.includes('instagram')) return 'IG';
+  if (lower.includes('facebook') || lower === 'fb') return 'Facebook';
+  if (lower.includes('zillow')) return 'Zillow';
+  if (
+    lower.includes('self') ||
+    lower.includes('sphere') ||
+    lower.includes('referral') ||
+    lower.includes('past client')
+  ) {
+    return 'Self';
+  }
+  return 'Other';
+}
 
 export type ActivityType =
   | 'call'

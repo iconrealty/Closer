@@ -249,11 +249,16 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
       )}
 
       {/* THE REASON FOR THEIR MOVE */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-2.5">
+      <div className="bg-cream border border-[#E8E3D8] rounded-[9px] p-4 sm:p-5 space-y-2.5">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-base sm:text-sm font-semibold text-olive-900">
-            The Reason for their move
-          </h3>
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#A27B4D]">
+              The reason for the move
+            </div>
+            <h3 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-[#2C484B] mt-1">
+              What matters to {client.firstName || client.name}
+            </h3>
+          </div>
           {hasUnsavedChanges && (
             <span className="text-xs font-medium text-rust-600">
               Unsaved changes
@@ -273,14 +278,17 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
       </div>
 
       {/* SECTION 1: TARGET BUDGET & PRICE RANGE */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 pb-3 border-b border-tan-200">
+      <div className="bg-cream border border-[#E8E3D8] rounded-[9px] p-4 sm:p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 pb-3 border-b border-[#EEE9DF]">
           <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#A27B4D] mb-1">
+              Their home search
+            </div>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-olive-50 text-olive-700 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-olive-50 text-[#2C484B] flex items-center justify-center shrink-0">
                 <DollarSign className="w-4 h-4" />
               </div>
-              <h3 className="text-base sm:text-sm font-semibold text-olive-900">
+              <h3 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-[#2C484B]">
                 1. Target Budget &amp; Price Range
               </h3>
             </div>
@@ -342,10 +350,13 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
       </div>
 
       {/* SECTION 2: TYPE OF PROPERTY */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-4">
-        <div className="flex items-start justify-between gap-3 sm:gap-4 flex-wrap pb-3 border-b border-tan-200">
+      <div className="bg-cream border border-[#E8E3D8] rounded-[9px] p-4 sm:p-5 space-y-4">
+        <div className="flex items-start justify-between gap-3 sm:gap-4 flex-wrap pb-3 border-b border-[#EEE9DF]">
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-olive-900">
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#A27B4D] mb-1">
+              Property style
+            </div>
+            <h3 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-[#2C484B]">
               2. Type of Property
             </h3>
             <p className="text-sm sm:text-xs text-tan-500 mt-1">
@@ -415,14 +426,17 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
       </div>
 
       {/* SECTION 3: CITIES & LOCATIONS */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-4">
-        <div className="flex items-start justify-between gap-3 sm:gap-4 flex-wrap pb-3 border-b border-tan-200">
+      <div className="bg-cream border border-[#E8E3D8] rounded-[9px] p-4 sm:p-5 space-y-4">
+        <div className="flex items-start justify-between gap-3 sm:gap-4 flex-wrap pb-3 border-b border-[#EEE9DF]">
           <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#A27B4D] mb-1">
+              Preferred markets
+            </div>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-olive-50 text-olive-700 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-olive-50 text-[#2C484B] flex items-center justify-center shrink-0">
                 <MapPin className="w-4 h-4" />
               </div>
-              <h3 className="text-base sm:text-sm font-semibold text-olive-900">
+              <h3 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-[#2C484B]">
                 3. Cities &amp; Preferred Markets
               </h3>
             </div>
@@ -563,14 +577,17 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
       </div>
 
       {/* SECTION 4: BEDROOMS, BATHROOMS, SQFT & STORIES */}
-      <div className="bg-cream border border-tan-200 rounded-xl p-4 sm:p-5 space-y-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap pb-3 border-b border-tan-200">
+      <div className="bg-cream border border-[#E8E3D8] rounded-[9px] p-4 sm:p-5 space-y-4">
+        <div className="flex items-start justify-between gap-4 flex-wrap pb-3 border-b border-[#EEE9DF]">
           <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#A27B4D] mb-1">
+              Home specifications
+            </div>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-olive-50 text-olive-700 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-olive-50 text-[#2C484B] flex items-center justify-center shrink-0">
                 <SlidersHorizontal className="w-4 h-4" />
               </div>
-              <h3 className="text-base sm:text-sm font-semibold text-olive-900">
+              <h3 className="font-display text-[17px] font-semibold tracking-[-0.02em] text-[#2C484B]">
                 4. Bed, Bath, Sqft &amp; Stories
               </h3>
             </div>
