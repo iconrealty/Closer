@@ -640,7 +640,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                 : 'text-[#68736D] hover:text-[#2B4A4D]'
             }`}
           >
-            <span>Properties to Show</span>
+            <span>Properties</span>
             <span className="px-2 py-0.5 rounded-full bg-[#EFEBE0] text-[#5F6D65] text-[11px] font-semibold tabular-nums">
               {sentCount}
             </span>
