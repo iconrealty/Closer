@@ -59,16 +59,35 @@ export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
         photoURL: user.photoURL,
       });
     } catch (err: unknown) {
+      console.error('Google sign-in error:', err);
       const code =
         typeof err === 'object' && err !== null && 'code' in err
           ? String((err as { code?: string }).code)
           : '';
+      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+
       if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
         setError('Google sign-in window was closed before completing.');
       } else if (code === 'auth/popup-blocked') {
         setError('Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.');
+      } else if (code === 'auth/unauthorized-domain') {
+        setError(
+          `This domain (${host}) is not authorized for Google Sign-In. Add "${host}" in Firebase Console → Authentication → Settings → Authorized domains.`
+        );
+      } else if (code === 'auth/missing-config') {
+        setError(
+          'Google Sign-In is not configured for this deployment yet. Add the VITE_FIREBASE_* environment variables in your hosting settings.'
+        );
+      } else if (code === 'auth/api-key-not-valid' || code === 'auth/invalid-api-key') {
+        setError('The Firebase API key is invalid or was revoked. Update it in your environment variables or re-enable Google Sign-In.');
+      } else if (code === 'auth/operation-not-allowed') {
+        setError('Google Sign-In is not enabled in Firebase Authentication → Sign-in method.');
       } else {
-        setError('Unable to sign in with Google right now. Please try again.');
+        setError(
+          code
+            ? `Unable to sign in with Google (${code}). Please try again.`
+            : 'Unable to sign in with Google right now. Please try again.'
+        );
       }
     } finally {
       setIsGoogleLoading(false);
