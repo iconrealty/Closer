@@ -69,6 +69,70 @@
   }
 }
 
+/* Comfortable Readability Typography Scale for Logged-In Workspace */
+.crm-app-shell {
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.5;
+}
+
+.crm-app-shell .text-\[10px\] {
+  font-size: 0.75rem !important;
+  line-height: 1.35;
+}
+
+.crm-app-shell .text-\[11px\] {
+  font-size: 0.8125rem !important;
+  line-height: 1.4;
+}
+
+.crm-app-shell .text-\[13px\] {
+  font-size: 0.9375rem !important;
+  line-height: 1.45;
+}
+
+.crm-app-shell .text-\[15px\] {
+  font-size: 1rem !important;
+  line-height: 1.45;
+}
+
+.crm-app-shell .text-\[17px\] {
+  font-size: 1.1875rem !important;
+  line-height: 1.35;
+}
+
+@media (min-width: 40rem) {
+  .crm-app-shell .sm\:text-\[10px\] {
+    font-size: 0.75rem !important;
+    line-height: 1.35;
+  }
+
+  .crm-app-shell .sm\:text-\[11px\] {
+    font-size: 0.8125rem !important;
+    line-height: 1.4;
+  }
+
+  .crm-app-shell .sm\:text-\[13px\] {
+    font-size: 0.9375rem !important;
+    line-height: 1.45;
+  }
+}
+
+@media (min-width: 48rem) {
+  .crm-app-shell .md\:text-\[10px\] {
+    font-size: 0.75rem !important;
+    line-height: 1.35;
+  }
+
+  .crm-app-shell .md\:text-\[11px\] {
+    font-size: 0.8125rem !important;
+    line-height: 1.4;
+  }
+}
+
 /* Crisp, minimal sage-slate scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

@@ -129,7 +129,7 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
   };
 
   return (
-    <div className="h-dvh w-screen bg-tan-50 text-olive-900 flex flex-col font-sans selection:bg-olive-700 selection:text-cream overflow-hidden">
+    <div className="crm-app-shell h-dvh w-screen bg-tan-50 text-olive-900 flex flex-col font-sans selection:bg-olive-700 selection:text-cream overflow-hidden">
       {/* 1. Top Navbar */}
       <GmailNavbar
         googleUser={googleUser}

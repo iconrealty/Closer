@@ -66,7 +66,7 @@ export const GmailNavbar: React.FC<GmailNavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-30 bg-cream border-b border-tan-200 select-none shrink-0">
-      <div className="px-3 sm:px-4 flex items-center justify-between gap-2.5 sm:gap-3 h-14 md:h-12">
+      <div className="px-3 sm:px-4 flex items-center justify-between gap-2.5 sm:gap-3 h-14">
         {/* LEFT: Clean Logo */}
         <div className="flex items-center gap-2 shrink-0 md:min-w-[160px]">
           {onToggleSidebar && (

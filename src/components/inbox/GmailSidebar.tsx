@@ -96,7 +96,7 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
     `w-4 h-4 ${isActive ? 'text-amber-200' : 'text-olive-200/75'}`;
 
   return (
-    <aside className="w-60 bg-olive-800 text-olive-100 border-r border-olive-900 flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-3rem)] select-none shrink-0 overflow-y-auto">
+    <aside className="w-64 bg-olive-800 text-olive-100 border-r border-olive-900 flex flex-col h-[calc(100dvh-3.5rem)] select-none shrink-0 overflow-y-auto">
       {/* 1. Minimal Compose Button */}
       <div className="p-3">
         <button
