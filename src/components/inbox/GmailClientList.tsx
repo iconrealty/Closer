@@ -275,7 +275,6 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
     all_contacts: 'All Contacts',
     properties_to_show: 'Properties to Show',
     pipeline_board: 'Pipeline Board',
-    scripts: 'Scripts',
   };
 
   const renderClientRow = (client: Client) => {

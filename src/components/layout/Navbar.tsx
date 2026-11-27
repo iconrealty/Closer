@@ -59,17 +59,6 @@ export const Navbar: React.FC = () => {
           >
             All Contacts
           </button>
-
-          <button
-            onClick={() => setActiveView('scripts')}
-            className={`transition-colors whitespace-nowrap shrink-0 py-1 cursor-pointer ${
-              activeView === 'scripts'
-                ? 'text-olive-700 border-b-2 border-olive-700 font-bold'
-                : 'text-tan-600 hover:text-olive-900'
-            }`}
-          >
-            Quick Scripts
-          </button>
         </nav>
 
         <div className="flex items-center gap-3 shrink-0">
@@ -108,14 +97,6 @@ export const Navbar: React.FC = () => {
           }`}
         >
           Contacts
-        </button>
-        <button
-          onClick={() => setActiveView('scripts')}
-          className={`px-3 py-1.5 rounded whitespace-nowrap cursor-pointer ${
-            activeView === 'scripts' ? 'bg-cream text-olive-900 font-bold border border-tan-200' : 'text-tan-600'
-          }`}
-        >
-          Scripts
         </button>
       </div>
     </header>

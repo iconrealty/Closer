@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { formatCurrency } from '../../utils/formatters';
 
 interface BudgetRangeSliderProps {
@@ -21,6 +21,26 @@ export const BUDGET_PRESETS = [
   { label: '1.2M-2.0M', min: 1200000, max: 2000000 },
 ];
 
+const MAX_SUPPORTED_PRICE = 100000000;
+
+function formatWithCommas(val: number): string {
+  return Math.max(0, Math.round(val)).toLocaleString('en-US');
+}
+
+function findCursorPosAfterDigits(formatted: string, digitCount: number): number {
+  if (digitCount <= 0) return 0;
+  let seen = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (/\d/.test(formatted[i])) {
+      seen++;
+      if (seen === digitCount) {
+        return i + 1;
+      }
+    }
+  }
+  return formatted.length;
+}
+
 export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
   min,
   max,
@@ -32,7 +52,25 @@ export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
   showPresets = true,
 }) => {
   const trackRef = useRef<HTMLDivElement>(null);
+  const minInputRef = useRef<HTMLInputElement>(null);
+  const maxInputRef = useRef<HTMLInputElement>(null);
+
   const [activeThumb, setActiveThumb] = useState<'min' | 'max' | null>(null);
+  const [focusedField, setFocusedField] = useState<'min' | 'max' | null>(null);
+  const [minDraft, setMinDraft] = useState<string>(() => formatWithCommas(min));
+  const [maxDraft, setMaxDraft] = useState<string>(() => formatWithCommas(max));
+
+  useEffect(() => {
+    if (focusedField !== 'min') {
+      setMinDraft(formatWithCommas(min));
+    }
+  }, [min, focusedField]);
+
+  useEffect(() => {
+    if (focusedField !== 'max') {
+      setMaxDraft(formatWithCommas(max));
+    }
+  }, [max, focusedField]);
 
   // Compute percentages for track styling
   const minPercent = Math.max(0, Math.min(100, ((min - minLimit) / (maxLimit - minLimit)) * 100));
@@ -94,8 +132,69 @@ export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
     }
   };
 
+  const handleLiveNumericInput = (
+    field: 'min' | 'max',
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const raw = e.target.value;
+    const selectionStart = e.target.selectionStart ?? raw.length;
+    const digitsBeforeCursor = raw.slice(0, selectionStart).replace(/\D/g, '').length;
+    const digitsOnly = raw.replace(/\D/g, '');
+
+    if (!digitsOnly) {
+      if (field === 'min') {
+        setMinDraft('');
+        onChange(0, max);
+      } else {
+        setMaxDraft('');
+      }
+      return;
+    }
+
+    const numericVal = Math.min(MAX_SUPPORTED_PRICE, Number(digitsOnly));
+    const formatted = formatWithCommas(numericVal);
+
+    if (field === 'min') {
+      setMinDraft(formatted);
+      onChange(numericVal, max);
+      requestAnimationFrame(() => {
+        if (minInputRef.current && document.activeElement === minInputRef.current) {
+          const nextPos = findCursorPosAfterDigits(formatted, digitsBeforeCursor);
+          minInputRef.current.setSelectionRange(nextPos, nextPos);
+        }
+      });
+    } else {
+      setMaxDraft(formatted);
+      onChange(min, numericVal);
+      requestAnimationFrame(() => {
+        if (maxInputRef.current && document.activeElement === maxInputRef.current) {
+          const nextPos = findCursorPosAfterDigits(formatted, digitsBeforeCursor);
+          maxInputRef.current.setSelectionRange(nextPos, nextPos);
+        }
+      });
+    }
+  };
+
+  const handleMinBlur = () => {
+    setFocusedField(null);
+    const digits = minDraft.replace(/\D/g, '');
+    const resolvedMin = digits ? Math.min(MAX_SUPPORTED_PRICE, Number(digits)) : 0;
+    const resolvedMax = resolvedMin > max ? resolvedMin : max;
+    onChange(resolvedMin, resolvedMax);
+    setMinDraft(formatWithCommas(resolvedMin));
+  };
+
+  const handleMaxBlur = () => {
+    setFocusedField(null);
+    const digits = maxDraft.replace(/\D/g, '');
+    const resolvedMax = digits ? Math.min(MAX_SUPPORTED_PRICE, Number(digits)) : max;
+    const resolvedMin = resolvedMax < min ? resolvedMax : min;
+    onChange(resolvedMin, resolvedMax);
+    setMaxDraft(formatWithCommas(resolvedMax));
+  };
+
   return (
-    <div className={`space-y-2.5 ${className}`}>
+    <div className={`space-y-3 ${className}`}>
       {/* Presets - Clean & Simple */}
       {showPresets && (
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -191,6 +290,55 @@ export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
             <span>$4M</span>
             <span>$5M</span>
             <span>$6M</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Manual Min / Max Price Inputs with live comma formatting */}
+      <div className="pt-2 border-t border-tan-200/80 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div>
+          <label className="block text-[11px] font-medium text-tan-600 mb-1">
+            Min Price
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-tan-500 text-sm sm:text-xs font-medium pointer-events-none">
+              $
+            </span>
+            <input
+              ref={minInputRef}
+              type="text"
+              inputMode="numeric"
+              aria-label="Manual minimum price"
+              value={minDraft}
+              onFocus={() => setFocusedField('min')}
+              onChange={(e) => handleLiveNumericInput('min', e)}
+              onBlur={handleMinBlur}
+              placeholder="0"
+              className="w-full min-h-[42px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg pl-7 pr-3 py-2 sm:py-1.5 text-base sm:text-xs font-medium tabular-nums text-olive-900 focus:outline-none focus:border-olive-700"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-medium text-tan-600 mb-1">
+            Max Price
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-tan-500 text-sm sm:text-xs font-medium pointer-events-none">
+              $
+            </span>
+            <input
+              ref={maxInputRef}
+              type="text"
+              inputMode="numeric"
+              aria-label="Manual maximum price"
+              value={maxDraft}
+              onFocus={() => setFocusedField('max')}
+              onChange={(e) => handleLiveNumericInput('max', e)}
+              onBlur={handleMaxBlur}
+              placeholder="6,000,000"
+              className="w-full min-h-[42px] sm:min-h-0 bg-cream border border-tan-300 rounded-xl sm:rounded-lg pl-7 pr-3 py-2 sm:py-1.5 text-base sm:text-xs font-medium tabular-nums text-olive-900 focus:outline-none focus:border-olive-700"
+            />
           </div>
         </div>
       </div>

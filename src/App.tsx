@@ -7,7 +7,6 @@ import { AllPropertiesToPageView } from './components/inbox/AllPropertiesToPageV
 import { DashboardWorkspace } from './components/dashboard/DashboardWorkspace';
 import { PipelineBoard } from './components/pipeline/PipelineBoard';
 import { ContactsTable } from './components/contacts/ContactsTable';
-import { ScriptsView } from './components/scripts/ScriptsView';
 import { ClientDetailPage } from './components/clients/ClientDetailPage';
 import { AddClientModal } from './components/modals/AddClientModal';
 import { QuickCommModal } from './components/modals/QuickCommModal';
@@ -230,16 +229,6 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-6">
                   <PipelineBoard
                     onOpenClient={(client) => setSelectedClient(client)}
-                  />
-                </div>
-              )}
-
-              {/* E. Quick Scripts */}
-              {selectedFolder === 'scripts' && (
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-6">
-                  <ScriptsView
-                    agentName={googleUser.displayName?.split(' ')[0]}
-                    onOpenCompose={handleOpenCompose}
                   />
                 </div>
               )}

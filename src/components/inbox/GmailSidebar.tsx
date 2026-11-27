@@ -32,8 +32,7 @@ export type GmailFolderId =
   | 'closed'
   | 'all_contacts'
   | 'properties_to_show'
-  | 'pipeline_board'
-  | 'scripts';
+  | 'pipeline_board';
 
 interface GmailSidebarProps {
   selectedFolder: GmailFolderId;
@@ -306,17 +305,6 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
           <div className="flex items-center gap-2.5">
             <Kanban className={iconClass(selectedFolder === 'pipeline_board')} />
             <span>Pipeline Board</span>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleFolderClick('scripts')}
-          className={navItemClass(selectedFolder === 'scripts')}
-        >
-          <div className="flex items-center gap-2.5">
-            <FileText className={iconClass(selectedFolder === 'scripts')} />
-            <span>Scripts</span>
           </div>
         </button>
       </div>

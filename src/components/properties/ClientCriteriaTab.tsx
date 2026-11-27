@@ -460,7 +460,7 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
               </h3>
             </div>
             <p className="text-sm sm:text-xs text-tan-500 mt-1">
-              Select desired price range using presets or the slider.
+              Select desired price range using presets, the slider, or manual Min / Max inputs.
             </p>
           </div>
 

@@ -26,8 +26,8 @@ const getMigratedKey = (userId: string) => `closer_crm_migrated_v1_${userId}`;
 
 interface CrmContextType {
   clients: Client[];
-  activeView: 'queue' | 'pipeline' | 'contacts' | 'scripts';
-  setActiveView: (view: 'queue' | 'pipeline' | 'contacts' | 'scripts') => void;
+  activeView: 'queue' | 'pipeline' | 'contacts';
+  setActiveView: (view: 'queue' | 'pipeline' | 'contacts') => void;
   selectedClient: Client | null;
   setSelectedClient: (client: Client | null) => void;
   isAddModalOpen: boolean;
@@ -157,7 +157,7 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
   const clientsRef = useRef<Client[]>(clients);
   clientsRef.current = clients;
 
-  const [activeView, setActiveView] = useState<'queue' | 'pipeline' | 'contacts' | 'scripts'>(
+  const [activeView, setActiveView] = useState<'queue' | 'pipeline' | 'contacts'>(
     'queue'
   );
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);

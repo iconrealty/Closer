@@ -331,17 +331,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                     <span>Pipeline Board</span>
                   </div>
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleNavigate('scripts')}
-                  className={sheetRowClass(selectedFolder === 'scripts')}
-                >
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-olive-700" />
-                    <span>Follow-Up Scripts</span>
-                  </div>
-                </button>
               </div>
 
               {/* Client Queues */}
