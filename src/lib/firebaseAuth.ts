@@ -48,10 +48,20 @@ const hasValidConfig = Boolean(resolvedConfig.apiKey && resolvedConfig.projectId
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
+let initErrorCode: string | null = null;
 
 if (hasValidConfig) {
-  app = getApps().length ? getApps()[0] : initializeApp(resolvedConfig);
-  auth = getAuth(app);
+  try {
+    app = getApps().length ? getApps()[0] : initializeApp(resolvedConfig);
+    auth = getAuth(app);
+  } catch (err: unknown) {
+    console.error('Firebase initialization failed:', err);
+    initErrorCode =
+      typeof err === 'object' && err !== null && 'code' in err
+        ? String((err as { code?: string }).code)
+        : 'auth/invalid-api-key';
+    auth = null;
+  }
 }
 
 const provider = new GoogleAuthProvider();
@@ -105,8 +115,12 @@ export const googleSignIn = async (): Promise<{
   accessToken: string | null;
 }> => {
   if (!auth) {
-    const err = new Error('Firebase Auth configuration is missing.');
-    (err as Error & { code?: string }).code = 'auth/missing-config';
+    const err = new Error(
+      initErrorCode
+        ? `Firebase Auth failed to initialize (${initErrorCode}).`
+        : 'Firebase Auth configuration is missing.'
+    );
+    (err as Error & { code?: string }).code = initErrorCode || 'auth/missing-config';
     throw err;
   }
   try {

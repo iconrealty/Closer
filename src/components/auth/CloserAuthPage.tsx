@@ -354,7 +354,7 @@ export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
             </form>
           </div>
 
-          <div className="px-7 py-4 sm:px-8 bg-tan-50/80 border-t border-tan-200 flex items-center justify-between gap-3 text-xs text-tan-600">
+          <div className="px-7 py-4 sm:px-8 bg-tan-50/80 border-t border-tan-200 flex items-center justify-center text-xs text-tan-600">
             <div>
               {isSignUp ? 'Already have an account?' : 'Don’t have an account?'}{' '}
               <button
@@ -368,13 +368,6 @@ export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
                 {isSignUp ? 'Sign in' : 'Sign up'}
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => onAuthenticated()}
-              className="text-xs font-medium text-tan-500 hover:text-olive-900 cursor-pointer whitespace-nowrap transition-colors"
-            >
-              Skip for now
-            </button>
           </div>
         </div>
       </main>
