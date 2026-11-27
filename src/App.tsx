@@ -59,7 +59,39 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
     setSelectedClient,
     isAddModalOpen,
     setIsAddModalOpen,
+    hasUnsavedCriteria,
+    triggerUnsavedCriteriaWarning,
   } = useCrm();
+
+  const isNavigationLocked = Boolean(selectedClient && hasUnsavedCriteria);
+
+  const handleGuardedGoDashboard = () => {
+    if (isNavigationLocked) {
+      triggerUnsavedCriteriaWarning();
+      return;
+    }
+    setSelectedClient(null);
+    setSelectedFolder('dashboard');
+  };
+
+  const handleGuardedSelectFolder = (folder: GmailFolderId) => {
+    if (isNavigationLocked) {
+      triggerUnsavedCriteriaWarning();
+      setIsSidebarOpenMobile(false);
+      return;
+    }
+    setSelectedClient(null);
+    setSelectedFolder(folder);
+    setIsSidebarOpenMobile(false);
+  };
+
+  const handleGuardedSignOut = () => {
+    if (isNavigationLocked) {
+      triggerUnsavedCriteriaWarning();
+      return;
+    }
+    onReturnToLanding();
+  };
 
   // Navigation State
   const [selectedFolder, setSelectedFolder] = useState<GmailFolderId>('dashboard');
@@ -103,11 +135,8 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
       <GmailNavbar
         googleUser={googleUser}
         onToggleSidebar={() => setIsSidebarOpenMobile((prev) => !prev)}
-        onGoDashboard={() => {
-          setSelectedClient(null);
-          setSelectedFolder('dashboard');
-        }}
-        onReturnToLanding={onReturnToLanding}
+        onGoDashboard={handleGuardedGoDashboard}
+        onReturnToLanding={handleGuardedSignOut}
       />
 
       {/* 2. Main 2-Column Layout */}
@@ -128,11 +157,7 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
         >
           <GmailSidebar
             selectedFolder={selectedFolder}
-            onSelectFolder={(folder) => {
-              setSelectedClient(null);
-              setSelectedFolder(folder);
-              setIsSidebarOpenMobile(false);
-            }}
+            onSelectFolder={handleGuardedSelectFolder}
             selectedPriorityFilter={priorityFilter}
             onSelectPriorityFilter={setPriorityFilter}
             selectedTypeFilter={typeFilter}
@@ -227,15 +252,12 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
       <MobileBottomNav
         googleUser={googleUser}
         selectedFolder={selectedFolder}
-        onSelectFolder={(folder) => {
-          setSelectedClient(null);
-          setSelectedFolder(folder);
-        }}
+        onSelectFolder={handleGuardedSelectFolder}
         selectedPriorityFilter={priorityFilter}
         onSelectPriorityFilter={setPriorityFilter}
         selectedTypeFilter={typeFilter}
         onSelectTypeFilter={setTypeFilter}
-        onReturnToLanding={onReturnToLanding}
+        onReturnToLanding={handleGuardedSignOut}
       />
 
       {/* Quick Add Client Modal */}

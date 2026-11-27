@@ -69,6 +69,11 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
       };
     }
 
+    const safeMin = Number.isFinite(targetPriceMin) ? Math.max(0, targetPriceMin) : 400000;
+    const safeMax = Number.isFinite(targetPriceMax)
+      ? Math.max(safeMin, targetPriceMax)
+      : Math.max(safeMin, 600000);
+
     const newClient = addClient({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
@@ -80,8 +85,8 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
       stage,
       priority,
       source,
-      targetPriceMin: targetPriceMin || 400000,
-      targetPriceMax: targetPriceMax || 600000,
+      targetPriceMin: safeMin,
+      targetPriceMax: safeMax,
       minSqft: 500,
       locations: locations.length > 0 ? locations : ['Metropolitan Area'],
       criteriaNotes: criteriaNotes.trim(),

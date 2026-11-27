@@ -32,6 +32,10 @@ interface CrmContextType {
   setSelectedClient: (client: Client | null) => void;
   isAddModalOpen: boolean;
   setIsAddModalOpen: (open: boolean) => void;
+  hasUnsavedCriteria: boolean;
+  setHasUnsavedCriteria: (dirty: boolean) => void;
+  unsavedCriteriaWarningTick: number;
+  triggerUnsavedCriteriaWarning: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   brandColor: 'blue' | 'emerald' | 'indigo' | 'charcoal';
@@ -157,7 +161,9 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     'queue'
   );
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpenState] = useState(false);
+  const [hasUnsavedCriteria, setHasUnsavedCriteria] = useState(false);
+  const [unsavedCriteriaWarningTick, setUnsavedCriteriaWarningTick] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [brandColor, setBrandColorState] = useState<'blue' | 'emerald' | 'indigo' | 'charcoal'>(
     'blue'
@@ -166,6 +172,18 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     () => Boolean(db && auth?.currentUser?.uid === userId && auth.currentUser.emailVerified)
   );
   const hasMigratedLocalRef = useRef<boolean>(false);
+
+  const triggerUnsavedCriteriaWarning = () => {
+    setUnsavedCriteriaWarningTick((prev) => prev + 1);
+  };
+
+  const setIsAddModalOpen = (open: boolean) => {
+    if (open && selectedClientId && hasUnsavedCriteria) {
+      triggerUnsavedCriteriaWarning();
+      return;
+    }
+    setIsAddModalOpenState(open);
+  };
 
   const setBrandColor = (color: 'blue' | 'emerald' | 'indigo' | 'charcoal') => {
     setBrandColorState(color);
@@ -312,6 +330,7 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     clientsRef.current = nextClients;
     setClients(nextClients);
     if (selectedClientId === id) {
+      setHasUnsavedCriteria(false);
       setSelectedClientId(null);
     }
 
@@ -611,6 +630,7 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     } catch {
       console.error('Failed to write to localStorage');
     }
+    setHasUnsavedCriteria(false);
     setSelectedClientId(null);
 
     if (isCloudReady && idsToDelete.length > 0) {
@@ -787,6 +807,10 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
         setSelectedClient,
         isAddModalOpen,
         setIsAddModalOpen,
+        hasUnsavedCriteria,
+        setHasUnsavedCriteria,
+        unsavedCriteriaWarningTick,
+        triggerUnsavedCriteriaWarning,
         searchQuery,
         setSearchQuery,
         brandColor,

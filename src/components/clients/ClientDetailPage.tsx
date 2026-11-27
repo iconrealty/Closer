@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useCrm } from '../../context/CrmContext';
 import {
   Client,
@@ -28,6 +28,7 @@ import {
   Edit2,
   Star,
   Check,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface ClientDetailPageProps {
@@ -66,7 +67,13 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
     logActivity,
     rescheduleFollowUp,
     updateLastContactedDate,
+    hasUnsavedCriteria,
+    unsavedCriteriaWarningTick,
+    triggerUnsavedCriteriaWarning,
   } = useCrm();
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showUnsavedBanner, setShowUnsavedBanner] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
     'criteria' | 'properties' | 'follow_up' | 'activity'
@@ -133,6 +140,35 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
     setFollowUpDate(client.nextFollowUpDate);
     setFollowUpNote(client.nextFollowUpNote || '');
   }, [client.nextFollowUpDate, client.nextFollowUpNote]);
+
+  useEffect(() => {
+    if (!hasUnsavedCriteria) {
+      setShowUnsavedBanner(false);
+    }
+  }, [hasUnsavedCriteria]);
+
+  useEffect(() => {
+    if (unsavedCriteriaWarningTick > 0 && hasUnsavedCriteria) {
+      setShowUnsavedBanner(true);
+      scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [unsavedCriteriaWarningTick, hasUnsavedCriteria]);
+
+  const handleGuardedBack = () => {
+    if (hasUnsavedCriteria) {
+      triggerUnsavedCriteriaWarning();
+      return;
+    }
+    onBack();
+  };
+
+  const handleSelectTab = (tab: 'criteria' | 'properties' | 'follow_up' | 'activity') => {
+    if (tab !== activeTab && hasUnsavedCriteria) {
+      triggerUnsavedCriteriaWarning();
+      return;
+    }
+    setActiveTab(tab);
+  };
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -202,7 +238,30 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
   const isHot = client.priority === 'hot';
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-tan-50 overflow-y-auto">
+    <div
+      ref={scrollContainerRef}
+      className="flex-1 flex flex-col min-w-0 min-h-0 bg-tan-50 overflow-y-auto"
+    >
+      {/* Sticky Unsaved Search Criteria Block Banner */}
+      {showUnsavedBanner && hasUnsavedCriteria && (
+        <div className="bg-rust-700 text-cream text-xs px-5 py-2.5 flex items-center justify-between gap-3 shrink-0 sticky top-0 z-30 shadow-xs">
+          <span className="flex items-center gap-2 font-medium">
+            <AlertTriangle className="w-4 h-4 text-amber-200 shrink-0" />
+            <span>
+              You have unsaved search criteria. Click <strong>Save Search Criteria</strong> before searching Zillow/ChatGPT or leaving this page.
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowUnsavedBanner(false)}
+            className="text-rust-100 hover:text-cream cursor-pointer px-1 shrink-0"
+            aria-label="Dismiss warning"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Subtle inline confirmation banner */}
       {toastMsg && (
         <div className="bg-olive-800 text-cream text-xs px-5 py-2 flex items-center justify-between shrink-0 sticky top-0 z-20">
@@ -226,8 +285,17 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8D704F] hover:text-olive-700 min-h-[40px] sm:min-h-0 py-1 -ml-1 px-1.5 rounded-md transition-colors cursor-pointer"
+            onClick={handleGuardedBack}
+            className={`inline-flex items-center gap-1.5 text-xs font-bold min-h-[40px] sm:min-h-0 py-1 -ml-1 px-1.5 rounded-md transition-colors ${
+              hasUnsavedCriteria
+                ? 'text-tan-400 cursor-not-allowed'
+                : 'text-[#8D704F] hover:text-olive-700 cursor-pointer'
+            }`}
+            title={
+              hasUnsavedCriteria
+                ? 'Save search criteria before leaving this page'
+                : 'Back to all clients'
+            }
           >
             <ArrowLeft className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             <span>All clients</span>
@@ -621,7 +689,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
         >
           <button
             type="button"
-            onClick={() => setActiveTab('criteria')}
+            onClick={() => handleSelectTab('criteria')}
             className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 font-semibold ${
               activeTab === 'criteria'
                 ? 'text-[#2B4A4D] after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
@@ -633,11 +701,15 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveTab('properties')}
-            className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 font-semibold ${
+            onClick={() => handleSelectTab('properties')}
+            aria-disabled={hasUnsavedCriteria}
+            title={hasUnsavedCriteria ? 'Save search criteria before switching tabs' : undefined}
+            className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 font-semibold ${
               activeTab === 'properties'
-                ? 'text-[#2B4A4D] after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
-                : 'text-[#68736D] hover:text-[#2B4A4D]'
+                ? 'text-[#2B4A4D] cursor-pointer after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
+                : hasUnsavedCriteria
+                ? 'text-tan-400 cursor-not-allowed'
+                : 'text-[#68736D] hover:text-[#2B4A4D] cursor-pointer'
             }`}
           >
             <span>Properties</span>
@@ -648,11 +720,15 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveTab('follow_up')}
-            className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 font-semibold ${
+            onClick={() => handleSelectTab('follow_up')}
+            aria-disabled={hasUnsavedCriteria}
+            title={hasUnsavedCriteria ? 'Save search criteria before switching tabs' : undefined}
+            className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors whitespace-nowrap shrink-0 font-semibold ${
               activeTab === 'follow_up'
-                ? 'text-[#2B4A4D] after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
-                : 'text-[#68736D] hover:text-[#2B4A4D]'
+                ? 'text-[#2B4A4D] cursor-pointer after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
+                : hasUnsavedCriteria
+                ? 'text-tan-400 cursor-not-allowed'
+                : 'text-[#68736D] hover:text-[#2B4A4D] cursor-pointer'
             }`}
           >
             Follow-Up &amp; Notes
@@ -660,11 +736,15 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveTab('activity')}
-            className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 font-semibold ${
+            onClick={() => handleSelectTab('activity')}
+            aria-disabled={hasUnsavedCriteria}
+            title={hasUnsavedCriteria ? 'Save search criteria before switching tabs' : undefined}
+            className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 font-semibold ${
               activeTab === 'activity'
-                ? 'text-[#2B4A4D] after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
-                : 'text-[#68736D] hover:text-[#2B4A4D]'
+                ? 'text-[#2B4A4D] cursor-pointer after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
+                : hasUnsavedCriteria
+                ? 'text-tan-400 cursor-not-allowed'
+                : 'text-[#68736D] hover:text-[#2B4A4D] cursor-pointer'
             }`}
           >
             <span>History</span>

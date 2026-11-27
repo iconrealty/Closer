@@ -25,8 +25,8 @@ export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
   min,
   max,
   onChange,
-  minLimit = 100000,
-  maxLimit = 2000000,
+  minLimit = 0,
+  maxLimit = 6000000,
   step = 25000,
   className = '',
   showPresets = true,
@@ -62,10 +62,10 @@ export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
     const newVal = getValueFromPosition(e.clientX);
 
     if (activeThumb === 'min') {
-      const clampedMin = Math.min(newVal, max - step);
+      const clampedMin = Math.min(newVal, Math.min(maxLimit, max) - step);
       onChange(Math.max(minLimit, clampedMin), max);
     } else {
-      const clampedMax = Math.max(newVal, min + step);
+      const clampedMax = Math.max(newVal, Math.max(minLimit, min) + step);
       onChange(min, Math.min(maxLimit, clampedMax));
     }
   };
@@ -86,10 +86,10 @@ export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
     const distToMax = Math.abs(clickVal - max);
 
     if (distToMin < distToMax) {
-      const clampedMin = Math.min(clickVal, max - step);
+      const clampedMin = Math.min(clickVal, Math.min(maxLimit, max) - step);
       onChange(Math.max(minLimit, clampedMin), max);
     } else {
-      const clampedMax = Math.max(clickVal, min + step);
+      const clampedMax = Math.max(clickVal, Math.max(minLimit, min) + step);
       onChange(min, Math.min(maxLimit, clampedMax));
     }
   };
@@ -122,7 +122,7 @@ export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
             })}
           </div>
           <span className="text-sm sm:text-xs text-olive-900 font-bold tabular-nums">
-            {formatCurrency(min)} – {max >= maxLimit ? `${formatCurrency(maxLimit)}+` : formatCurrency(max)}
+            {formatCurrency(min)} – {formatCurrency(max)}
           </span>
         </div>
       )}
@@ -140,8 +140,8 @@ export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
             <div
               className="absolute top-0 bottom-0 bg-olive-700 rounded-full"
               style={{
-                left: `${minPercent}%`,
-                width: `${Math.max(0, maxPercent - minPercent)}%`,
+                left: `${Math.min(minPercent, maxPercent)}%`,
+                width: `${Math.abs(maxPercent - minPercent)}%`,
               }}
             />
 
@@ -184,12 +184,13 @@ export const BudgetRangeSlider: React.FC<BudgetRangeSliderProps> = ({
 
           {/* Simple Linear Track Labels */}
           <div className="flex justify-between text-xs sm:text-[10px] text-tan-500 tabular-nums mt-2.5 sm:mt-2">
-            <span>$100k</span>
-            <span>$500k</span>
-            <span>$800k</span>
-            <span>$1.15M</span>
-            <span>$1.5M</span>
-            <span>$2.0M+</span>
+            <span>$0</span>
+            <span>$1M</span>
+            <span>$2M</span>
+            <span>$3M</span>
+            <span>$4M</span>
+            <span>$5M</span>
+            <span>$6M</span>
           </div>
         </div>
       </div>

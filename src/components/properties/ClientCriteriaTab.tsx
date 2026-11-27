@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useCrm } from '../../context/CrmContext';
 import { Client } from '../../types/crm';
 import { BudgetRangeSlider } from '../common/BudgetRangeSlider';
@@ -23,6 +23,8 @@ import {
   CheckCircle2,
   SlidersHorizontal,
   Star,
+  AlertTriangle,
+  Lock,
 } from 'lucide-react';
 
 interface ClientCriteriaTabProps {
@@ -62,10 +64,18 @@ const PRICE_PRESETS = [
 export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
   client,
 }) => {
-  const { updateClient } = useCrm();
+  const {
+    updateClient,
+    setHasUnsavedCriteria,
+    unsavedCriteriaWarningTick,
+    triggerUnsavedCriteriaWarning,
+  } = useCrm();
+  const topBarRef = useRef<HTMLDivElement>(null);
 
   // Local draft state
-  const [minPrice, setMinPrice] = useState<number>(client.targetPriceMin || 500000);
+  const [minPrice, setMinPrice] = useState<number>(
+    typeof client.targetPriceMin === 'number' ? client.targetPriceMin : 500000
+  );
   const [maxPrice, setMaxPrice] = useState<number>(client.targetPriceMax || 850000);
 
   // Clean client selected cities (filter out generic "Orange County")
@@ -96,10 +106,10 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+  const [unsavedWarningMsg, setUnsavedWarningMsg] = useState<string | null>(null);
 
-  // Sync if client prop changes
-  useEffect(() => {
-    setMinPrice(client.targetPriceMin || 500000);
+  const resetDraftFromClient = () => {
+    setMinPrice(typeof client.targetPriceMin === 'number' ? client.targetPriceMin : 500000);
     setMaxPrice(client.targetPriceMax || 850000);
     const locs = cleanClientLocations(client.locations);
     const prim =
@@ -122,10 +132,47 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
     setStories(client.stories || 'Any');
     setReasonForMove(client.criteriaNotes || '');
     setHasUnsavedChanges(false);
+    setHasUnsavedCriteria(false);
+    setUnsavedWarningMsg(null);
+  };
+
+  // Sync if client prop changes
+  useEffect(() => {
+    resetDraftFromClient();
   }, [client.id]);
+
+  // Clear global unsaved lock if component unmounts
+  useEffect(() => {
+    return () => {
+      setHasUnsavedCriteria(false);
+    };
+  }, [setHasUnsavedCriteria]);
+
+  // Warn browser tab close/refresh when edits are unsaved
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Highlight warning banner & scroll to top bar when a blocked navigation/search occurs
+  useEffect(() => {
+    if (unsavedCriteriaWarningTick > 0 && hasUnsavedChanges) {
+      setUnsavedWarningMsg(
+        'Save your search criteria before searching Zillow or ChatGPT or leaving this page.'
+      );
+      topBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [unsavedCriteriaWarningTick, hasUnsavedChanges]);
 
   const markDirty = () => {
     setHasUnsavedChanges(true);
+    setHasUnsavedCriteria(true);
+    setSaveSuccessMsg(null);
   };
 
   // Save criteria changes to CRM context
@@ -133,9 +180,14 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
     const cleanLocs = cleanClientLocations(locations);
     const safePrimary = cleanLocs.includes(primaryLoc) ? primaryLoc : cleanLocs[0] || 'Irvine';
 
+    const safeMin = Math.max(0, minPrice);
+    const safeMax = Math.max(safeMin, maxPrice);
+    if (safeMin !== minPrice) setMinPrice(safeMin);
+    if (safeMax !== maxPrice) setMaxPrice(safeMax);
+
     updateClient(client.id, {
-      targetPriceMin: minPrice,
-      targetPriceMax: maxPrice,
+      targetPriceMin: safeMin,
+      targetPriceMax: safeMax,
       locations: cleanLocs,
       primaryLocation: safePrimary,
       propertyTypes: selectedPropTypes.length > 0 ? selectedPropTypes : ['Single Family'],
@@ -147,8 +199,10 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
     });
 
     setHasUnsavedChanges(false);
-    setSaveSuccessMsg('Search criteria saved successfully!');
-    setTimeout(() => setSaveSuccessMsg(null), 3000);
+    setHasUnsavedCriteria(false);
+    setUnsavedWarningMsg(null);
+    setSaveSuccessMsg('Search criteria saved! You can now search Zillow or ChatGPT.');
+    setTimeout(() => setSaveSuccessMsg(null), 3500);
   };
 
   // Toggle Property Type
@@ -219,8 +273,20 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
     };
   };
 
+  const handleBlockedSearch = () => {
+    setUnsavedWarningMsg(
+      'Save your search criteria first before searching Zillow or ChatGPT.'
+    );
+    triggerUnsavedCriteriaWarning();
+    topBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
   // Open direct Zillow Search with active filters matching client criteria in selected city
   const handleOpenZillowSearch = (targetCity?: string) => {
+    if (hasUnsavedChanges) {
+      handleBlockedSearch();
+      return;
+    }
     openZillowSearch(buildCriteriaPayload(targetCity));
   };
 
@@ -232,21 +298,122 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* Top Banner / Notification */}
-      {saveSuccessMsg && (
-        <div className="bg-olive-50 border border-olive-200 text-olive-900 px-4 py-3 sm:py-2.5 rounded-xl sm:rounded-lg flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm sm:text-xs font-medium">
-            <CheckCircle2 className="w-4 h-4 text-olive-700 shrink-0" />
-            <span>{saveSuccessMsg}</span>
+      {/* TOP SEARCH & SAVE ACTION BAR (Directly under the tabs menu) */}
+      <div
+        ref={topBarRef}
+        className={`p-3.5 sm:p-4 rounded-[9px] border transition-colors space-y-3 ${
+          hasUnsavedChanges
+            ? 'bg-amber-50/75 border-amber-500/45'
+            : 'bg-cream border-[#E8E3D8]'
+        }`}
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-2 text-sm sm:text-xs font-medium">
+            {hasUnsavedChanges ? (
+              <>
+                <AlertTriangle className="w-4 h-4 text-rust-600 shrink-0 mt-0.5 sm:mt-0" />
+                <span className="text-olive-900">
+                  <strong className="font-semibold text-rust-700">Unsaved changes</strong> — save search criteria to unlock Zillow, ChatGPT, and page navigation.
+                </span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-olive-700 shrink-0 mt-0.5 sm:mt-0" />
+                <span className="text-tan-600">
+                  {saveSuccessMsg || 'All criteria settings are saved.'}
+                </span>
+              </>
+            )}
           </div>
-          <button
-            onClick={() => setSaveSuccessMsg(null)}
-            className="text-olive-700 hover:text-olive-900 text-sm sm:text-xs font-semibold cursor-pointer p-1"
-          >
-            ✕
-          </button>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto shrink-0">
+            <button
+              type="button"
+              onClick={handleSaveCriteria}
+              className={`min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-lg text-sm sm:text-xs font-semibold transition-colors cursor-pointer ${
+                hasUnsavedChanges
+                  ? 'bg-olive-900 hover:bg-olive-800 text-cream ring-2 ring-amber-500/40 shadow-xs'
+                  : 'bg-tan-100 hover:bg-tan-200 text-olive-900 border border-tan-300'
+              }`}
+            >
+              <Save className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              <span>Save Search Criteria</span>
+            </button>
+
+            {hasUnsavedChanges ? (
+              <button
+                type="button"
+                onClick={handleBlockedSearch}
+                aria-disabled="true"
+                title="Save search criteria first to search Zillow"
+                className="min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3.5 sm:py-2 bg-tan-100 text-tan-500 font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs border border-tan-300 cursor-not-allowed"
+              >
+                <Lock className="w-3.5 h-3.5 sm:w-3 sm:h-3 shrink-0" />
+                <span>Search Zillow in {primaryLoc}</span>
+              </button>
+            ) : (
+              <a
+                href={getZillowSearchHref()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3.5 sm:py-2 bg-amber-700 hover:bg-amber-800 text-cream font-semibold rounded-xl sm:rounded-lg text-sm sm:text-xs shadow-xs transition-colors cursor-pointer group"
+              >
+                <Search className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <span>Search Zillow in {primaryLoc}</span>
+                <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3 opacity-85 group-hover:opacity-100" />
+              </a>
+            )}
+
+            {hasUnsavedChanges ? (
+              <button
+                type="button"
+                onClick={handleBlockedSearch}
+                aria-disabled="true"
+                title="Save search criteria first to search ChatGPT"
+                className="min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3.5 sm:py-2 bg-tan-100 text-tan-500 font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs border border-tan-300 cursor-not-allowed"
+              >
+                <Lock className="w-3.5 h-3.5 sm:w-3 sm:h-3 shrink-0" />
+                <span>Search {primaryLoc} in ChatGPT</span>
+              </button>
+            ) : (
+              <a
+                href={getChatGptSearchHref()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3.5 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream font-semibold rounded-xl sm:rounded-lg text-sm sm:text-xs shadow-xs transition-colors cursor-pointer group"
+              >
+                <Search className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <span>Search {primaryLoc} in ChatGPT</span>
+                <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3 opacity-85 group-hover:opacity-100" />
+              </a>
+            )}
+
+            {hasUnsavedChanges && (
+              <button
+                type="button"
+                onClick={resetDraftFromClient}
+                className="min-h-[40px] sm:min-h-0 px-3 py-2 sm:py-2 text-xs font-medium text-tan-700 hover:text-olive-900 underline underline-offset-4 cursor-pointer text-center"
+              >
+                Discard
+              </button>
+            )}
+          </div>
         </div>
-      )}
+
+        {hasUnsavedChanges && unsavedWarningMsg && (
+          <div className="bg-rust-50 border border-rust-200 text-rust-800 px-3.5 py-2 rounded-lg flex items-center justify-between gap-2 text-xs font-medium">
+            <span>{unsavedWarningMsg}</span>
+            <button
+              type="button"
+              onClick={() => setUnsavedWarningMsg(null)}
+              className="text-rust-600 hover:text-rust-900 cursor-pointer px-1"
+              aria-label="Dismiss warning"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* THE REASON FOR THEIR MOVE */}
       <div className="bg-cream border border-[#E8E3D8] rounded-[9px] p-4 sm:p-5 space-y-2.5">
@@ -491,14 +658,25 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenZillowSearch(city)}
-                      className={`inline-flex items-center gap-1 px-2 py-1 sm:px-1.5 sm:py-0.5 rounded-md sm:rounded text-xs sm:text-[11px] font-medium transition-colors cursor-pointer ${
-                        isPrimary
-                          ? 'bg-olive-800 hover:bg-olive-900 text-cream'
-                          : 'bg-olive-50 hover:bg-olive-100 text-olive-800 border border-olive-200'
+                      aria-disabled={hasUnsavedChanges}
+                      className={`inline-flex items-center gap-1 px-2 py-1 sm:px-1.5 sm:py-0.5 rounded-md sm:rounded text-xs sm:text-[11px] font-medium transition-colors ${
+                        hasUnsavedChanges
+                          ? 'bg-tan-200/70 text-tan-600 cursor-not-allowed opacity-75'
+                          : isPrimary
+                          ? 'bg-amber-700 hover:bg-amber-800 text-cream cursor-pointer'
+                          : 'bg-amber-50 hover:bg-amber-200/60 text-amber-800 border border-amber-200 cursor-pointer'
                       }`}
-                      title={`Search Zillow listings in ${city}`}
+                      title={
+                        hasUnsavedChanges
+                          ? 'Save search criteria first to search Zillow'
+                          : `Search Zillow listings in ${city}`
+                      }
                     >
-                      <Search className="w-3 h-3 sm:w-2.5 sm:h-2.5" />
+                      {hasUnsavedChanges ? (
+                        <Lock className="w-3 h-3 sm:w-2.5 sm:h-2.5" />
+                      ) : (
+                        <Search className="w-3 h-3 sm:w-2.5 sm:h-2.5" />
+                      )}
                       <span>Zillow</span>
                     </button>
                     <button
@@ -697,50 +875,6 @@ export const ClientCriteriaTab: React.FC<ClientCriteriaTabProps> = ({
         </div>
       </div>
 
-      {/* BOTTOM ACTION BAR */}
-      <div className="p-4 bg-tan-50 border border-tan-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="flex items-center gap-2 text-sm sm:text-xs font-medium text-tan-600">
-          <CheckCircle2 className="w-4 h-4 text-olive-700 shrink-0" />
-          <span>
-            {hasUnsavedChanges
-              ? 'You have unsaved changes to this client’s criteria.'
-              : 'All criteria settings are saved.'}
-          </span>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-2 w-full sm:w-auto">
-          <a
-            href={getZillowSearchHref()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="min-h-[46px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3.5 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs transition-colors cursor-pointer group"
-          >
-            <Search className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-            <span>Search Zillow in {primaryLoc}</span>
-            <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3 opacity-80 group-hover:opacity-100" />
-          </a>
-
-          <a
-            href={getChatGptSearchHref()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="min-h-[46px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-3 sm:py-2 bg-cream hover:bg-tan-100 text-olive-900 font-medium rounded-xl sm:rounded-lg text-sm sm:text-xs border border-tan-200 transition-colors cursor-pointer group"
-          >
-            <Search className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-tan-500" />
-            <span>Search {primaryLoc} in ChatGPT</span>
-            <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-tan-400 group-hover:text-olive-900" />
-          </a>
-
-          <button
-            type="button"
-            onClick={handleSaveCriteria}
-            className="min-h-[46px] sm:min-h-0 flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 bg-olive-900 hover:bg-olive-800 text-cream rounded-xl sm:rounded-lg text-sm sm:text-xs font-medium transition-colors cursor-pointer"
-          >
-            <Save className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-            <span>Save Search Criteria</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

@@ -85,7 +85,7 @@ export const buildZillowSearchUrl = (criteria: PropertySearchCriteria): string =
 
   // 1. Budget Range
   const min = criteria.minPrice && criteria.minPrice > 0 ? criteria.minPrice : undefined;
-  const max = criteria.maxPrice && criteria.maxPrice > 0 && criteria.maxPrice < 5000000 ? criteria.maxPrice : undefined;
+  const max = criteria.maxPrice && criteria.maxPrice > 0 ? criteria.maxPrice : undefined;
 
   if (min !== undefined || max !== undefined) {
     const priceObj: { min?: number; max?: number } = {};
@@ -178,9 +178,7 @@ export const buildRedfinSearchUrl = (criteria: PropertySearchCriteria): string =
 
   const min = criteria.minPrice && criteria.minPrice > 0 ? criteria.minPrice : undefined;
   const max =
-    criteria.maxPrice && criteria.maxPrice > 0 && criteria.maxPrice < 5000000
-      ? criteria.maxPrice
-      : undefined;
+    criteria.maxPrice && criteria.maxPrice > 0 ? criteria.maxPrice : undefined;
 
   if (min !== undefined) {
     filters.push(`min-price=${Math.round(min)}`);
@@ -285,9 +283,7 @@ export const buildChatGptSearchUrl = (criteria: PropertySearchCriteria): string 
 
   const min = criteria.minPrice && criteria.minPrice > 0 ? criteria.minPrice : undefined;
   const max =
-    criteria.maxPrice && criteria.maxPrice > 0 && criteria.maxPrice < 5000000
-      ? criteria.maxPrice
-      : undefined;
+    criteria.maxPrice && criteria.maxPrice > 0 ? criteria.maxPrice : undefined;
   if (min && max) {
     details.push(`price ${formatPromptPrice(min)} to ${formatPromptPrice(max)}`);
   } else if (min) {
