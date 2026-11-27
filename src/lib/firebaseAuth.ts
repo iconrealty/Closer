@@ -3,6 +3,8 @@ import {
   getAuth,
   Auth,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   onAuthStateChanged,
   signOut,
@@ -30,14 +32,16 @@ const configModules = import.meta.glob<{ default?: FirebaseWebConfig } & Firebas
 const localConfigModule = Object.values(configModules)[0];
 const localConfig: FirebaseWebConfig = localConfigModule?.default ?? localConfigModule ?? {};
 
+const envVal = (v: string | undefined) => (typeof v === 'string' ? v.trim() : '');
+
 const resolvedConfig: FirebaseWebConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || localConfig.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket,
+  apiKey: envVal(import.meta.env.VITE_FIREBASE_API_KEY) || localConfig.apiKey,
+  authDomain: envVal(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) || localConfig.authDomain,
+  projectId: envVal(import.meta.env.VITE_FIREBASE_PROJECT_ID) || localConfig.projectId,
+  storageBucket: envVal(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || localConfig.storageBucket,
   messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || localConfig.appId,
+    envVal(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || localConfig.messagingSenderId,
+  appId: envVal(import.meta.env.VITE_FIREBASE_APP_ID) || localConfig.appId,
 };
 
 const hasValidConfig = Boolean(resolvedConfig.apiKey && resolvedConfig.projectId);
@@ -73,6 +77,19 @@ export const initAuth = (
     onAuthSignedOut?.();
     return () => {};
   }
+
+  getRedirectResult(auth)
+    .then((result) => {
+      if (result?.user) {
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        cachedAccessToken = credential?.accessToken ?? null;
+        onAuthSuccess?.(result.user, cachedAccessToken);
+      }
+    })
+    .catch((err) => {
+      console.error('Google redirect sign-in check:', err);
+    });
+
   return onAuthStateChanged(auth, (user: User | null) => {
     if (user) {
       onAuthSuccess?.(user, cachedAccessToken);
@@ -98,6 +115,20 @@ export const googleSignIn = async (): Promise<{
     const credential = GoogleAuthProvider.credentialFromResult(result);
     cachedAccessToken = credential?.accessToken ?? null;
     return { user: result.user, accessToken: cachedAccessToken };
+  } catch (err: unknown) {
+    const code =
+      typeof err === 'object' && err !== null && 'code' in err
+        ? String((err as { code?: string }).code)
+        : '';
+    const isStandaloneTopWindow = typeof window !== 'undefined' && window.self === window.top;
+    if (
+      isStandaloneTopWindow &&
+      (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment')
+    ) {
+      await signInWithRedirect(auth, provider);
+      return new Promise(() => {});
+    }
+    throw err;
   } finally {
     isSigningIn = false;
   }
