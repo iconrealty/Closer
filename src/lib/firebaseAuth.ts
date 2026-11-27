@@ -6,10 +6,20 @@ import {
   signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
   onAuthStateChanged,
   signOut,
   User,
 } from 'firebase/auth';
+import {
+  getFirestore,
+  Firestore,
+  doc,
+  getDocFromServer,
+} from 'firebase/firestore';
 
 export const SCOPES = [
   'https://www.googleapis.com/auth/userinfo.email',
@@ -20,6 +30,7 @@ interface FirebaseWebConfig {
   apiKey?: string;
   authDomain?: string;
   projectId?: string;
+  firestoreDatabaseId?: string;
   storageBucket?: string;
   messagingSenderId?: string;
   appId?: string;
@@ -38,6 +49,8 @@ const resolvedConfig: FirebaseWebConfig = {
   apiKey: envVal(import.meta.env.VITE_FIREBASE_API_KEY) || localConfig.apiKey,
   authDomain: envVal(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) || localConfig.authDomain,
   projectId: envVal(import.meta.env.VITE_FIREBASE_PROJECT_ID) || localConfig.projectId,
+  firestoreDatabaseId:
+    envVal(import.meta.env.VITE_FIREBASE_DATABASE_ID) || localConfig.firestoreDatabaseId,
   storageBucket: envVal(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || localConfig.storageBucket,
   messagingSenderId:
     envVal(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || localConfig.messagingSenderId,
@@ -47,13 +60,17 @@ const resolvedConfig: FirebaseWebConfig = {
 const hasValidConfig = Boolean(resolvedConfig.apiKey && resolvedConfig.projectId);
 
 let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
+export let auth: Auth | null = null;
+export let db: Firestore | null = null;
 let initErrorCode: string | null = null;
 
 if (hasValidConfig) {
   try {
     app = getApps().length ? getApps()[0] : initializeApp(resolvedConfig);
     auth = getAuth(app);
+    db = resolvedConfig.firestoreDatabaseId
+      ? getFirestore(app, resolvedConfig.firestoreDatabaseId)
+      : getFirestore(app);
   } catch (err: unknown) {
     console.error('Firebase initialization failed:', err);
     initErrorCode =
@@ -61,8 +78,21 @@ if (hasValidConfig) {
         ? String((err as { code?: string }).code)
         : 'auth/invalid-api-key';
     auth = null;
+    db = null;
   }
 }
+
+async function testConnection() {
+  if (!db) return;
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error('Please check your Firebase configuration.');
+    }
+  }
+}
+void testConnection();
 
 const provider = new GoogleAuthProvider();
 SCOPES.forEach((scope) => provider.addScope(scope));
@@ -90,7 +120,7 @@ export const initAuth = (
 
   getRedirectResult(auth)
     .then((result) => {
-      if (result?.user) {
+      if (result?.user && result.user.emailVerified) {
         const credential = GoogleAuthProvider.credentialFromResult(result);
         cachedAccessToken = credential?.accessToken ?? null;
         onAuthSuccess?.(result.user, cachedAccessToken);
@@ -101,7 +131,7 @@ export const initAuth = (
     });
 
   return onAuthStateChanged(auth, (user: User | null) => {
-    if (user) {
+    if (user && user.emailVerified) {
       onAuthSuccess?.(user, cachedAccessToken);
     } else if (!isSigningIn) {
       cachedAccessToken = null;
@@ -143,6 +173,64 @@ export const googleSignIn = async (): Promise<{
       return new Promise(() => {});
     }
     throw err;
+  } finally {
+    isSigningIn = false;
+  }
+};
+
+export const emailSignIn = async (
+  email: string,
+  password: string
+): Promise<User> => {
+  if (!auth) {
+    const err = new Error(
+      initErrorCode
+        ? `Firebase Auth failed to initialize (${initErrorCode}).`
+        : 'Firebase Auth configuration is missing.'
+    );
+    (err as Error & { code?: string }).code = initErrorCode || 'auth/missing-config';
+    throw err;
+  }
+  try {
+    isSigningIn = true;
+    const result = await signInWithEmailAndPassword(auth, email.trim(), password);
+    if (!result.user.emailVerified) {
+      await sendEmailVerification(result.user);
+      await signOut(auth);
+      const err = new Error('Please verify your email address before signing in.');
+      (err as Error & { code?: string }).code = 'auth/email-not-verified';
+      throw err;
+    }
+    return result.user;
+  } finally {
+    isSigningIn = false;
+  }
+};
+
+export const emailSignUp = async (
+  firstName: string,
+  lastName: string,
+  email: string,
+  password: string
+): Promise<void> => {
+  if (!auth) {
+    const err = new Error(
+      initErrorCode
+        ? `Firebase Auth failed to initialize (${initErrorCode}).`
+        : 'Firebase Auth configuration is missing.'
+    );
+    (err as Error & { code?: string }).code = initErrorCode || 'auth/missing-config';
+    throw err;
+  }
+  try {
+    isSigningIn = true;
+    const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+    if (fullName) {
+      await updateProfile(result.user, { displayName: fullName });
+    }
+    await sendEmailVerification(result.user);
+    await signOut(auth);
   } finally {
     isSigningIn = false;
   }

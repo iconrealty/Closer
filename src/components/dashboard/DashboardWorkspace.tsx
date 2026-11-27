@@ -1319,19 +1319,25 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                 <select
                   value={momentClientId || clients[0]?.id || ''}
                   onChange={(e) => setMomentClientId(e.target.value)}
-                  className="sm:col-span-4 bg-cream border border-tan-300 rounded-lg px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 text-base sm:text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700"
+                  disabled={clients.length === 0}
+                  className="sm:col-span-4 bg-cream border border-tan-300 rounded-lg px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 text-base sm:text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700 disabled:opacity-60"
                 >
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {formatClientDisplayName(c)}
-                    </option>
-                  ))}
+                  {clients.length === 0 ? (
+                    <option value="">Add a client first</option>
+                  ) : (
+                    clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {formatClientDisplayName(c)}
+                      </option>
+                    ))
+                  )}
                 </select>
 
                 <select
                   value={momentType}
                   onChange={(e) => setMomentType(e.target.value as ActivityType)}
-                  className="sm:col-span-2 bg-cream border border-tan-300 rounded-lg px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 text-base sm:text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700"
+                  disabled={clients.length === 0}
+                  className="sm:col-span-2 bg-cream border border-tan-300 rounded-lg px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 text-base sm:text-xs text-olive-900 font-medium focus:outline-none focus:border-olive-700 disabled:opacity-60"
                 >
                   <option value="note">Note</option>
                   <option value="call">Call</option>
@@ -1344,13 +1350,15 @@ export const DashboardWorkspace: React.FC<DashboardWorkspaceProps> = ({
                   type="text"
                   value={momentText}
                   onChange={(e) => setMomentText(e.target.value)}
-                  placeholder="e.g. Mentioned dog’s name is Cooper..."
-                  className="sm:col-span-4 bg-cream border border-tan-300 rounded-lg px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                  disabled={clients.length === 0}
+                  placeholder={clients.length === 0 ? 'Add a client first to log notes...' : 'e.g. Mentioned dog’s name is Cooper...'}
+                  className="sm:col-span-4 bg-cream border border-tan-300 rounded-lg px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700 disabled:opacity-60"
                 />
 
                 <button
                   type="submit"
-                  className="sm:col-span-2 min-h-[44px] sm:min-h-0 px-3.5 py-2.5 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-sm sm:text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                  disabled={clients.length === 0 || !momentText.trim()}
+                  className="sm:col-span-2 min-h-[44px] sm:min-h-0 px-3.5 py-2.5 sm:py-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-sm sm:text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save Moment
                 </button>

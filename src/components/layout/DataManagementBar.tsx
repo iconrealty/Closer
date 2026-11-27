@@ -11,7 +11,7 @@ export const DataManagementBar: React.FC = () => {
     exportCSV,
     exportJSON,
     importJSON,
-    resetToSampleData,
+    clearAllClients,
   } = useCrm();
 
   const [notification, setNotification] = React.useState<string | null>(null);
@@ -110,17 +110,17 @@ export const DataManagementBar: React.FC = () => {
             />
             {confirmReset ? (
               <div className="flex items-center gap-1 bg-rust-50 border border-rust-200 rounded px-2 py-0.5">
-                <span className="text-[10px] font-medium text-rust-700">Reset to sample data?</span>
+                <span className="text-[10px] font-medium text-rust-700">Clear all clients?</span>
                 <button
                   onClick={() => {
-                    resetToSampleData();
+                    clearAllClients();
                     setConfirmReset(false);
-                    setNotification('Reset to sample data');
+                    setNotification('All clients cleared');
                     setTimeout(() => setNotification(null), 3000);
                   }}
                   className="px-1.5 py-0.5 bg-rust-600 hover:bg-rust-700 text-cream font-medium text-[10px] rounded cursor-pointer"
                 >
-                  Yes, Reset
+                  Yes, Clear
                 </button>
                 <button
                   onClick={() => setConfirmReset(false)}
@@ -132,7 +132,7 @@ export const DataManagementBar: React.FC = () => {
             ) : (
               <button
                 onClick={() => setConfirmReset(true)}
-                title="Reset to clean sample data"
+                title="Clear all clients"
                 className="p-1.5 hover:text-olive-700 hover:bg-tan-200/70 rounded transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />

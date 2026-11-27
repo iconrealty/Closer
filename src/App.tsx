@@ -15,12 +15,38 @@ import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { CloserLandingPage } from './components/landing/CloserLandingPage';
 import { CloserAuthPage } from './components/auth/CloserAuthPage';
 import { GoogleSessionUser, initAuth, logout } from './lib/firebaseAuth';
+import { ensureUserProfile } from './lib/firestoreClients';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Client, Priority, ClientType, SentProperty } from './types/crm';
 
-const SESSION_KEY = 'closer_entered_app';
+const SESSION_STORAGE_KEY = 'closer_auth_session_v1';
+const LEGACY_SESSION_KEY = 'closer_entered_app';
+
+interface StoredAuthSession {
+  user: GoogleSessionUser;
+  provider: 'google' | 'email';
+}
+
+function readStoredSession(): StoredAuthSession | null {
+  try {
+    sessionStorage.removeItem(LEGACY_SESSION_KEY);
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredAuthSession>;
+    if (parsed?.user?.uid) {
+      return {
+        user: parsed.user,
+        provider: parsed.provider === 'email' ? 'email' : 'google',
+      };
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return null;
+}
 
 interface CrmAppContentProps {
-  googleUser: GoogleSessionUser | null;
+  googleUser: GoogleSessionUser;
   onReturnToLanding: () => void;
 }
 
@@ -187,6 +213,7 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
               {selectedFolder === 'scripts' && (
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-6">
                   <ScriptsView
+                    agentName={googleUser.displayName?.split(' ')[0]}
                     onOpenCompose={handleOpenCompose}
                   />
                 </div>
@@ -236,48 +263,73 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
 type AppView = 'landing' | 'sign-in' | 'sign-up' | 'app';
 
 export default function App() {
-  const [googleUser, setGoogleUser] = useState<GoogleSessionUser | null>(null);
-  const [view, setView] = useState<AppView>(() => {
-    try {
-      return sessionStorage.getItem(SESSION_KEY) === '1' ? 'app' : 'landing';
-    } catch {
-      return 'landing';
-    }
-  });
+  const [initialSession] = useState<StoredAuthSession | null>(() => readStoredSession());
+  const [googleUser, setGoogleUser] = useState<GoogleSessionUser | null>(
+    () => initialSession?.user ?? null
+  );
+  const [view, setView] = useState<AppView>(() =>
+    initialSession?.user ? 'app' : 'landing'
+  );
 
   useEffect(() => {
     const unsubscribe = initAuth(
       (user) => {
-        setGoogleUser({
+        const signedInUser: GoogleSessionUser = {
           uid: user.uid,
           displayName: user.displayName,
           email: user.email,
           photoURL: user.photoURL,
+        };
+        try {
+          sessionStorage.setItem(
+            SESSION_STORAGE_KEY,
+            JSON.stringify({ user: signedInUser, provider: 'google' } satisfies StoredAuthSession)
+          );
+        } catch {
+          // Ignore storage errors
+        }
+        void ensureUserProfile(signedInUser).catch((err) => {
+          console.error('Failed to ensure user profile:', err);
         });
+        setGoogleUser(signedInUser);
+        setView('app');
       },
       () => {
+        try {
+          sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        } catch {
+          // Ignore storage errors
+        }
         setGoogleUser(null);
+        setView((prev) => (prev === 'app' ? 'landing' : prev));
       }
     );
     return unsubscribe;
   }, []);
 
   const handleAuthenticated = (signedInUser?: GoogleSessionUser) => {
-    if (signedInUser) {
-      setGoogleUser(signedInUser);
-    }
+    if (!signedInUser?.uid) return;
     try {
-      sessionStorage.setItem(SESSION_KEY, '1');
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({ user: signedInUser, provider: 'google' } satisfies StoredAuthSession)
+      );
     } catch {
       // Ignore storage errors in restricted environments
     }
+    void ensureUserProfile(signedInUser).catch((err) => {
+      console.error('Failed to ensure user profile:', err);
+    });
+    setGoogleUser(signedInUser);
     setView('app');
     window.scrollTo({ top: 0 });
   };
 
   const handleReturnToLanding = async () => {
     try {
-      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      sessionStorage.removeItem(LEGACY_SESSION_KEY);
+      localStorage.removeItem('closer_user_profile');
     } catch {
       // Ignore storage errors
     }
@@ -306,10 +358,10 @@ export default function App() {
     );
   }
 
-  if (view === 'sign-in' || view === 'sign-up') {
+  if (view === 'sign-in' || view === 'sign-up' || !googleUser) {
     return (
       <CloserAuthPage
-        mode={view === 'sign-in' ? 'in' : 'up'}
+        mode={view === 'sign-up' ? 'up' : 'in'}
         onChangeMode={(nextMode) =>
           setView(nextMode === 'in' ? 'sign-in' : 'sign-up')
         }
@@ -323,11 +375,13 @@ export default function App() {
   }
 
   return (
-    <CrmProvider>
-      <CrmAppContent
-        googleUser={googleUser}
-        onReturnToLanding={handleReturnToLanding}
-      />
-    </CrmProvider>
+    <ErrorBoundary>
+      <CrmProvider key={googleUser.uid} userId={googleUser.uid}>
+        <CrmAppContent
+          googleUser={googleUser}
+          onReturnToLanding={handleReturnToLanding}
+        />
+      </CrmProvider>
+    </ErrorBoundary>
   );
 }

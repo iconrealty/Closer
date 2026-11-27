@@ -7,7 +7,12 @@ import {
   EyeOff,
   Loader2,
 } from 'lucide-react';
-import { googleSignIn, GoogleSessionUser } from '../../lib/firebaseAuth';
+import {
+  googleSignIn,
+  emailSignIn,
+  emailSignUp,
+  GoogleSessionUser,
+} from '../../lib/firebaseAuth';
 
 export type AuthMode = 'in' | 'up';
 
@@ -18,8 +23,6 @@ interface CloserAuthPageProps {
   onAuthenticated: (googleUser?: GoogleSessionUser) => void;
 }
 
-const PROFILE_STORAGE_KEY = 'closer_user_profile';
-
 export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
   mode,
   onChangeMode,
@@ -28,22 +31,13 @@ export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
 }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState(() => {
-    try {
-      const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.email || '';
-      }
-    } catch {
-      // Ignore storage errors
-    }
-    return '';
-  });
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const isSignUp = mode === 'up';
 
@@ -94,9 +88,10 @@ export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setNotice(null);
 
     if (isSignUp && !firstName.trim()) {
       setError('Please enter your first name to continue.');
@@ -106,29 +101,64 @@ export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
       setError('Please enter a valid email address.');
       return;
     }
-    if (password.length < 4) {
-      setError('Please enter a password (at least 4 characters).');
+    if (password.length < 6) {
+      setError('Please enter a password (at least 6 characters).');
       return;
     }
 
+    setIsEmailLoading(true);
     try {
-      const fullName = isSignUp
-        ? `${firstName.trim()} ${lastName.trim()}`.trim()
-        : email.split('@')[0];
-      localStorage.setItem(
-        PROFILE_STORAGE_KEY,
-        JSON.stringify({
-          firstName: firstName.trim() || fullName,
-          lastName: lastName.trim(),
-          fullName,
-          email: email.trim(),
-        })
-      );
+      localStorage.removeItem('closer_user_profile');
     } catch {
       // Ignore storage errors
     }
 
-    onAuthenticated();
+    try {
+      if (isSignUp) {
+        await emailSignUp(firstName, lastName, email, password);
+        setNotice(
+          'Account created! Please check your email and click the verification link, then sign in.'
+        );
+        setPassword('');
+        onChangeMode('in');
+      } else {
+        const user = await emailSignIn(email, password);
+        onAuthenticated({
+          uid: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+        });
+      }
+    } catch (err: unknown) {
+      const code =
+        typeof err === 'object' && err !== null && 'code' in err
+          ? String((err as { code?: string }).code)
+          : '';
+      if (code === 'auth/email-not-verified') {
+        setNotice(
+          'Please verify your email address using the link we sent to your inbox before signing in.'
+        );
+      } else if (code === 'auth/operation-not-allowed') {
+        setError(
+          'Email/password sign-in is not enabled in Firebase Console → Authentication → Sign-in method. Please use Continue with Google or enable Email/Password there.'
+        );
+      } else if (
+        code === 'auth/invalid-credential' ||
+        code === 'auth/wrong-password' ||
+        code === 'auth/user-not-found'
+      ) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else if (code === 'auth/email-already-in-use') {
+        setError('An account with this email already exists. Try signing in instead.');
+      } else if (code === 'auth/weak-password') {
+        setError('Password must be at least 6 characters.');
+      } else {
+        setError('Unable to complete sign-in right now. Please try Continue with Google.');
+      }
+    } finally {
+      setIsEmailLoading(false);
+    }
   };
 
   return (
@@ -249,6 +279,15 @@ export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
               <span className="h-px flex-1 bg-tan-200" />
             </div>
 
+            {notice && (
+              <div
+                role="status"
+                className="mb-4 px-3.5 py-2.5 rounded-lg bg-olive-50 border border-olive-200 text-olive-900 text-xs font-medium"
+              >
+                {notice}
+              </div>
+            )}
+
             {error && (
               <div
                 role="alert"
@@ -346,10 +385,20 @@ export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
 
               <button
                 type="submit"
-                className="w-full min-h-[44px] mt-1 flex items-center justify-center gap-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-[13px] font-bold shadow-[0_4px_12px_rgba(36,75,82,0.12)] transition-all hover:-translate-y-[1px] cursor-pointer"
+                disabled={isEmailLoading || isGoogleLoading}
+                className="w-full min-h-[44px] mt-1 flex items-center justify-center gap-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-[13px] font-bold shadow-[0_4px_12px_rgba(36,75,82,0.12)] transition-all hover:-translate-y-[1px] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span>Continue</span>
-                <ArrowRight size={15} />
+                {isEmailLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{isSignUp ? 'Creating account...' : 'Signing in...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continue</span>
+                    <ArrowRight size={15} />
+                  </>
+                )}
               </button>
             </form>
           </div>
@@ -361,6 +410,7 @@ export const CloserAuthPage: React.FC<CloserAuthPageProps> = ({
                 type="button"
                 onClick={() => {
                   setError(null);
+                  setNotice(null);
                   onChangeMode(isSignUp ? 'in' : 'up');
                 }}
                 className="font-semibold text-olive-700 hover:text-amber-600 cursor-pointer transition-colors"

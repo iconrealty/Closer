@@ -1,0 +1,286 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated real estate agent profile scoped privately to the signed-in user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Agent primary email address.",
+          "maxLength": 254
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Agent display name.",
+          "maxLength": 120
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Optional agent avatar URL.",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when user profile was first created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest user profile update."
+        }
+      },
+      "required": ["uid", "email", "displayName", "createdAt", "updatedAt"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "Real estate client lead/contact record owned by an authenticated agent.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Client document identifier.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the agent who owns this client record.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "Primary client first name.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Primary client last name.",
+          "maxLength": 100
+        },
+        "name": {
+          "type": "string",
+          "description": "Formatted client display name.",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "phone": {
+          "type": "string",
+          "description": "Primary phone number.",
+          "maxLength": 40
+        },
+        "email": {
+          "type": "string",
+          "description": "Primary email address.",
+          "maxLength": 254
+        },
+        "hasSecondaryContact": {
+          "type": "boolean",
+          "description": "Whether a co-buyer or partner contact exists."
+        },
+        "secondaryContact": {
+          "type": "object",
+          "description": "Co-buyer or spouse contact details."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["buyer", "seller", "buyer_seller", "investor"],
+          "description": "Client representation type."
+        },
+        "stage": {
+          "type": "string",
+          "enum": [
+            "new_lead",
+            "contacted",
+            "active_showing",
+            "under_contract",
+            "closed",
+            "long_term_nurture"
+          ],
+          "description": "Current pipeline stage."
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["hot", "warm", "cold"],
+          "description": "Follow-up priority."
+        },
+        "source": {
+          "type": "string",
+          "enum": ["Tiktok", "IG", "Self", "Zillow", "Facebook", "Other"],
+          "description": "Lead source."
+        },
+        "targetPriceMin": {
+          "type": "number",
+          "description": "Minimum budget or target price."
+        },
+        "targetPriceMax": {
+          "type": "number",
+          "description": "Maximum budget or target price."
+        },
+        "locations": {
+          "type": "array",
+          "description": "Preferred target cities (max 20)."
+        },
+        "primaryLocation": {
+          "type": "string",
+          "description": "Primary target city.",
+          "maxLength": 120
+        },
+        "propertyTypes": {
+          "type": "array",
+          "description": "Preferred property types (max 15)."
+        },
+        "bedsMin": {
+          "type": "number",
+          "description": "Minimum bedrooms."
+        },
+        "bathsMin": {
+          "type": "number",
+          "description": "Minimum bathrooms."
+        },
+        "minSqft": {
+          "type": "number",
+          "description": "Minimum square footage."
+        },
+        "stories": {
+          "type": "string",
+          "description": "Preferred stories.",
+          "maxLength": 60
+        },
+        "garageSpaces": {
+          "type": "number",
+          "description": "Minimum garage spaces."
+        },
+        "mustHaves": {
+          "type": "array",
+          "description": "Must-have property features (max 30)."
+        },
+        "timeframe": {
+          "type": "string",
+          "description": "Target move timeline.",
+          "maxLength": 120
+        },
+        "preApprovalAmount": {
+          "type": "number",
+          "description": "Pre-approval amount."
+        },
+        "criteriaNotes": {
+          "type": "string",
+          "description": "Search criteria notes.",
+          "maxLength": 5000
+        },
+        "preApproved": {
+          "type": "boolean",
+          "description": "Whether buyer is pre-approved."
+        },
+        "lenderName": {
+          "type": "string",
+          "description": "Lender or loan officer name.",
+          "maxLength": 160
+        },
+        "lastContactedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp of last client communication.",
+          "maxLength": 64
+        },
+        "nextFollowUpDate": {
+          "type": "string",
+          "description": "Scheduled follow-up date (YYYY-MM-DD).",
+          "maxLength": 32
+        },
+        "nextFollowUpNote": {
+          "type": "string",
+          "description": "Follow-up task note.",
+          "maxLength": 1000
+        },
+        "propertyOfInterest": {
+          "type": "object",
+          "description": "Highlighted property of interest."
+        },
+        "sentProperties": {
+          "type": "array",
+          "description": "Properties tracked/shown to the client (max 200)."
+        },
+        "underContractDetails": {
+          "type": "object",
+          "description": "Escrow details and milestones."
+        },
+        "activity": {
+          "type": "array",
+          "description": "Chronological activity log entries (max 500)."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "Optional avatar image URL.",
+          "maxLength": 1000
+        },
+        "tags": {
+          "type": "array",
+          "description": "Custom labels/tags (max 30)."
+        },
+        "isUnread": {
+          "type": "boolean",
+          "description": "Unread indicator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when client was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when client was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "firstName",
+        "lastName",
+        "name",
+        "phone",
+        "email",
+        "type",
+        "stage",
+        "priority",
+        "source",
+        "targetPriceMin",
+        "targetPriceMax",
+        "locations",
+        "criteriaNotes",
+        "preApproved",
+        "lastContactedAt",
+        "nextFollowUpDate",
+        "activity",
+        "tags",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profile document keyed by Firebase Auth UID."
+    },
+    "/clients/{clientId}": {
+      "schema": { "$ref": "#/entities/Client" },
+      "description": "Agent-owned client records synced across devices."
+    }
+  }
+}

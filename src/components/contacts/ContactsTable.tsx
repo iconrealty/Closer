@@ -157,7 +157,9 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({ onOpenClient, onOp
       <div className="md:hidden space-y-3">
         {sorted.length === 0 ? (
           <div className="bg-cream border border-tan-200 rounded-xl p-8 text-center text-sm text-tan-500">
-            No clients match the selected filters.
+            {clients.length === 0
+              ? 'No clients in your account yet. Tap Add to add your first client.'
+              : 'No clients match the selected filters.'}
           </div>
         ) : (
           sorted.map((client) => {
@@ -305,7 +307,9 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({ onOpenClient, onOp
               {sorted.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-tan-500">
-                    No clients match the selected filters.
+                    {clients.length === 0
+                      ? 'No clients in your account yet. Click Add Client to add your first client.'
+                      : 'No clients match the selected filters.'}
                   </td>
                 </tr>
               ) : (

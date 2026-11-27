@@ -53,7 +53,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     exportJSON,
     exportCSV,
     importJSON,
-    resetToSampleData,
+    clearAllClients,
   } = useCrm();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -532,16 +532,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                       className="min-h-[44px] flex items-center justify-center gap-2 px-3 py-2.5 bg-tan-50 border border-tan-200 rounded-xl text-sm font-medium text-rust-700 cursor-pointer"
                     >
                       <RotateCcw className="w-4 h-4" />
-                      <span>Reset Data</span>
+                      <span>Clear Clients</span>
                     </button>
                   ) : (
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => {
-                          resetToSampleData();
+                          clearAllClients();
                           setConfirmReset(false);
-                          setNotice('Sample data restored');
+                          setNotice('All clients cleared');
                           setTimeout(() => setNotice(null), 2500);
                         }}
                         className="flex-1 min-h-[44px] bg-rust-600 text-cream rounded-xl text-sm font-semibold cursor-pointer"

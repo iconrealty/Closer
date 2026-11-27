@@ -1,0 +1,197 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Primitives
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidOptionalString(data, field, maxLen) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalNumber(data, field) {
+      return !(field in data) || (data[field] is int || data[field] is float);
+    }
+
+    function isValidOptionalBool(data, field) {
+      return !(field in data) || data[field] is bool;
+    }
+
+    function isValidBoundedStringList(listVal, maxItems) {
+      return listVal is list &&
+        listVal.size() <= maxItems &&
+        (listVal.size() == 0 || (listVal[0] is string && listVal[0].size() <= 160));
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid == userId && data.uid == request.auth.uid && isValidId(data.uid) &&
+        data.email is string && data.email.size() <= 254 &&
+        data.displayName is string && data.displayName.size() <= 120 &&
+        isValidOptionalString(data, 'photoURL', 1000) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidClient(data, clientId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'firstName', 'lastName', 'name', 'phone', 'email',
+          'type', 'stage', 'priority', 'source', 'targetPriceMin', 'targetPriceMax',
+          'locations', 'criteriaNotes', 'preApproved', 'lastContactedAt',
+          'nextFollowUpDate', 'activity', 'tags', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'ownerId', 'firstName', 'lastName', 'name', 'phone', 'email',
+          'hasSecondaryContact', 'secondaryContact',
+          'type', 'stage', 'priority', 'source', 'targetPriceMin', 'targetPriceMax',
+          'locations', 'primaryLocation', 'propertyTypes', 'bedsMin', 'bathsMin',
+          'minSqft', 'stories', 'garageSpaces', 'mustHaves', 'timeframe',
+          'preApprovalAmount', 'criteriaNotes', 'preApproved', 'lenderName',
+          'lastContactedAt', 'nextFollowUpDate', 'nextFollowUpNote',
+          'propertyOfInterest', 'sentProperties', 'underContractDetails',
+          'activity', 'avatarUrl', 'tags', 'isUnread', 'createdAt', 'updatedAt'
+        ]) &&
+        data.id is string && data.id == clientId && isValidId(data.id) &&
+        data.ownerId is string && data.ownerId == request.auth.uid && isValidId(data.ownerId) &&
+        data.firstName is string && data.firstName.size() >= 1 && data.firstName.size() <= 100 &&
+        data.lastName is string && data.lastName.size() <= 100 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 240 &&
+        data.phone is string && data.phone.size() <= 40 &&
+        data.email is string && data.email.size() <= 254 &&
+        data.type in ['buyer', 'seller', 'buyer_seller', 'investor'] &&
+        data.stage in ['new_lead', 'contacted', 'active_showing', 'under_contract', 'closed', 'long_term_nurture'] &&
+        data.priority in ['hot', 'warm', 'cold'] &&
+        data.source in ['Tiktok', 'IG', 'Self', 'Zillow', 'Facebook', 'Other'] &&
+        (data.targetPriceMin is int || data.targetPriceMin is float) &&
+        (data.targetPriceMax is int || data.targetPriceMax is float) &&
+        isValidBoundedStringList(data.locations, 20) &&
+        data.criteriaNotes is string && data.criteriaNotes.size() <= 5000 &&
+        data.preApproved is bool &&
+        data.lastContactedAt is string && data.lastContactedAt.size() <= 64 &&
+        data.nextFollowUpDate is string && data.nextFollowUpDate.size() <= 32 &&
+        data.activity is list && data.activity.size() <= 500 &&
+        (data.activity.size() == 0 || data.activity[0] is map) &&
+        isValidBoundedStringList(data.tags, 30) &&
+        isValidOptionalBool(data, 'hasSecondaryContact') &&
+        (!('secondaryContact' in data) || data.secondaryContact is map) &&
+        isValidOptionalString(data, 'primaryLocation', 120) &&
+        (!('propertyTypes' in data) || isValidBoundedStringList(data.propertyTypes, 15)) &&
+        isValidOptionalNumber(data, 'bedsMin') &&
+        isValidOptionalNumber(data, 'bathsMin') &&
+        isValidOptionalNumber(data, 'minSqft') &&
+        isValidOptionalString(data, 'stories', 60) &&
+        isValidOptionalNumber(data, 'garageSpaces') &&
+        (!('mustHaves' in data) || isValidBoundedStringList(data.mustHaves, 30)) &&
+        isValidOptionalString(data, 'timeframe', 120) &&
+        isValidOptionalNumber(data, 'preApprovalAmount') &&
+        isValidOptionalString(data, 'lenderName', 160) &&
+        isValidOptionalString(data, 'nextFollowUpNote', 1000) &&
+        (!('propertyOfInterest' in data) || data.propertyOfInterest is map) &&
+        (!('sentProperties' in data) || (
+          data.sentProperties is list &&
+          data.sentProperties.size() <= 200 &&
+          (data.sentProperties.size() == 0 || data.sentProperties[0] is map)
+        )) &&
+        (!('underContractDetails' in data) || data.underContractDetails is map) &&
+        isValidOptionalString(data, 'avatarUrl', 1000) &&
+        isValidOptionalBool(data, 'isUnread') &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // 4. Users Collection (Private Agent Profiles)
+    match /users/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && isOwner(userId);
+      allow list: if isVerifiedUser() && existing().uid == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['email', 'displayName', 'photoURL', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // 5. Clients Collection (Strictly Owner-Scoped)
+    match /clients/{clientId} {
+      allow get: if isVerifiedUser() && isValidId(clientId) && existing().ownerId == request.auth.uid;
+      allow list: if isVerifiedUser() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(clientId) &&
+        isValidClient(incoming(), clientId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(clientId) &&
+        existing().ownerId == request.auth.uid &&
+        isValidClient(incoming(), clientId) &&
+        incoming().id == existing().id &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          // Action: Update client profile, criteria, or contact details
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'firstName', 'lastName', 'name', 'phone', 'email',
+            'hasSecondaryContact', 'secondaryContact',
+            'type', 'stage', 'priority', 'source',
+            'targetPriceMin', 'targetPriceMax', 'locations', 'primaryLocation',
+            'propertyTypes', 'bedsMin', 'bathsMin', 'minSqft', 'stories',
+            'garageSpaces', 'mustHaves', 'timeframe', 'preApprovalAmount',
+            'criteriaNotes', 'preApproved', 'lenderName', 'nextFollowUpDate',
+            'nextFollowUpNote', 'propertyOfInterest', 'sentProperties',
+            'underContractDetails', 'activity', 'avatarUrl', 'tags',
+            'isUnread', 'lastContactedAt', 'updatedAt'
+          ]) ||
+          // Action: Move pipeline stage
+          incoming().diff(existing()).affectedKeys().hasOnly(['stage', 'activity', 'updatedAt']) ||
+          // Action: Log follow-up or communication
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'isUnread', 'lastContactedAt', 'nextFollowUpDate', 'nextFollowUpNote', 'activity', 'updatedAt'
+          ]) ||
+          // Action: Manage sent properties or escrow milestones
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'sentProperties', 'underContractDetails', 'lastContactedAt', 'activity', 'updatedAt'
+          ])
+        );
+      allow delete: if isVerifiedUser() && isValidId(clientId) && existing().ownerId == request.auth.uid;
+    }
+  }
+}

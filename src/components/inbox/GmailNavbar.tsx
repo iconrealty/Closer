@@ -33,7 +33,7 @@ export const GmailNavbar: React.FC<GmailNavbarProps> = ({
     setSearchQuery,
     setIsAddModalOpen,
     stats,
-    resetToSampleData,
+    clearAllClients,
     exportJSON,
     exportCSV,
     importJSON,
@@ -139,12 +139,12 @@ export const GmailNavbar: React.FC<GmailNavbarProps> = ({
           <div className="relative hidden md:block">
             {confirmReset ? (
               <div className="flex items-center gap-1 bg-tan-100 border border-tan-200 rounded px-2 py-0.5 text-xs">
-                <span className="text-[10px] text-olive-900">Reset?</span>
+                <span className="text-[10px] text-olive-900">Clear?</span>
                 <button
                   onClick={() => {
-                    resetToSampleData();
+                    clearAllClients();
                     setConfirmReset(false);
-                    setNotification('Reset completed');
+                    setNotification('Clients cleared');
                     setTimeout(() => setNotification(null), 2500);
                   }}
                   className="px-1.5 py-0.2 bg-olive-700 hover:bg-olive-800 text-cream text-[10px] rounded cursor-pointer"
@@ -169,7 +169,7 @@ export const GmailNavbar: React.FC<GmailNavbarProps> = ({
                 </button>
                 <button
                   onClick={() => setConfirmReset(true)}
-                  title="Reset sample clients"
+                  title="Clear all clients"
                   className="p-1.5 text-tan-500 hover:text-olive-900 rounded hover:bg-tan-100 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />

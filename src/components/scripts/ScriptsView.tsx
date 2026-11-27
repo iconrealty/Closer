@@ -6,30 +6,33 @@ import { Copy, Check, MessageSquare, Mail } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 interface ScriptsViewProps {
+  agentName?: string;
   onOpenCompose: (client: any, mode: 'sms' | 'email', prefilledBody?: string) => void;
 }
 
-export const ScriptsView: React.FC<ScriptsViewProps> = ({ onOpenCompose }) => {
+export const ScriptsView: React.FC<ScriptsViewProps> = ({ agentName: agentNameProp, onOpenCompose }) => {
   const { clients } = useCrm();
   const [selectedClientId, setSelectedClientId] = useState<string>(clients[0]?.id || '');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const selectedClient = clients.find((c) => c.id === selectedClientId) || clients[0];
+  const resolvedAgentName = agentNameProp?.trim() || 'your agent';
 
   const fillTemplate = (script: FollowUpScript) => {
-    if (!selectedClient) return script.template;
+    if (!selectedClient) {
+      return script.template.replace(/{{agentName}}/g, resolvedAgentName);
+    }
     const name = selectedClient.name.split(' ')[0];
-    const location = selectedClient.locations[0] || 'Austin';
-    const criteria = selectedClient.criteriaNotes || '3 bed home';
+    const location = selectedClient.locations[0] || 'your target area';
+    const criteria = selectedClient.criteriaNotes || 'your home search';
     const price = formatCurrency((selectedClient.targetPriceMin + selectedClient.targetPriceMax) / 2);
-    const agentName = 'Sarah';
 
     return script.template
       .replace(/{{name}}/g, name)
       .replace(/{{location}}/g, location)
       .replace(/{{criteria}}/g, criteria)
       .replace(/{{price}}/g, price)
-      .replace(/{{agentName}}/g, agentName);
+      .replace(/{{agentName}}/g, resolvedAgentName);
   };
 
   const handleCopy = (script: FollowUpScript) => {
@@ -67,15 +70,20 @@ export const ScriptsView: React.FC<ScriptsViewProps> = ({ onOpenCompose }) => {
         <div className="flex items-center gap-2 bg-cream border border-tan-200 rounded-xl sm:rounded-lg p-2.5 sm:p-2 text-sm sm:text-xs">
           <span className="text-tan-600 font-medium whitespace-nowrap">Personalize:</span>
           <select
-            value={selectedClientId}
+            value={selectedClient?.id || ''}
             onChange={(e) => setSelectedClientId(e.target.value)}
-            className="flex-1 sm:flex-initial min-h-[40px] sm:min-h-0 bg-tan-50 border border-tan-200 rounded-lg sm:rounded px-2.5 py-1.5 sm:py-1 text-base sm:text-xs text-olive-900 font-semibold focus:outline-none focus:border-olive-700 cursor-pointer"
+            disabled={clients.length === 0}
+            className="flex-1 sm:flex-initial min-h-[40px] sm:min-h-0 bg-tan-50 border border-tan-200 rounded-lg sm:rounded px-2.5 py-1.5 sm:py-1 text-base sm:text-xs text-olive-900 font-semibold focus:outline-none focus:border-olive-700 cursor-pointer disabled:opacity-60"
           >
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.type})
-              </option>
-            ))}
+            {clients.length === 0 ? (
+              <option value="">No clients yet (preview)</option>
+            ) : (
+              clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.type})
+                </option>
+              ))
+            )}
           </select>
         </div>
       </div>
@@ -109,7 +117,8 @@ export const ScriptsView: React.FC<ScriptsViewProps> = ({ onOpenCompose }) => {
                 <div className="flex items-center gap-2 flex-1 sm:flex-initial">
                   <button
                     onClick={() => handleSendSms(script)}
-                    className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded-lg sm:rounded transition-colors font-medium cursor-pointer"
+                    disabled={!selectedClient}
+                    className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded-lg sm:rounded transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <MessageSquare className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-tan-600" />
                     <span>SMS</span>
@@ -117,7 +126,8 @@ export const ScriptsView: React.FC<ScriptsViewProps> = ({ onOpenCompose }) => {
 
                   <button
                     onClick={() => handleSendEmail(script)}
-                    className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded-lg sm:rounded transition-colors font-medium cursor-pointer"
+                    disabled={!selectedClient}
+                    className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 bg-tan-100 hover:bg-tan-200 text-olive-900 rounded-lg sm:rounded transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Mail className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-tan-600" />
                     <span>Email</span>

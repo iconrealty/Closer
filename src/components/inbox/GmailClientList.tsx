@@ -43,6 +43,7 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
     logActivity,
     updateClient,
     markAsRead,
+    setIsAddModalOpen,
   } = useCrm();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -772,8 +773,23 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
       {/* 3. Thread List */}
       <div className="flex-1 overflow-y-auto divide-y divide-tan-200 md:divide-tan-100 pb-28 md:pb-0">
         {sortedClients.length === 0 ? (
-          <div className="p-8 text-center text-sm md:text-xs text-tan-500">
-            {searchQuery ? `No leads matching "${searchQuery}"` : 'No leads in this view'}
+          <div className="p-8 text-center space-y-2.5">
+            <p className="text-sm md:text-xs text-tan-500">
+              {searchQuery
+                ? `No leads matching "${searchQuery}"`
+                : clients.length === 0
+                ? 'No clients in your account yet.'
+                : 'No leads in this view'}
+            </p>
+            {clients.length === 0 && !searchQuery && (
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(true)}
+                className="px-3.5 py-2 bg-olive-700 hover:bg-olive-800 text-cream rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+              >
+                Add Your First Client
+              </button>
+            )}
           </div>
         ) : selectedFolder === 'all_inbox' && allInboxLayout === 'sections' && allInboxTab === 'all' ? (
           <div className="divide-y divide-tan-200">
