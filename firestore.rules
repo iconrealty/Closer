@@ -194,7 +194,7 @@ service cloud.firestore {
 
     // 5. Clients Collection (Strictly Owner-Scoped)
     match /clients/{clientId} {
-      allow get: if isVerifiedUser() && isValidId(clientId) && existing().ownerId == request.auth.uid;
+      allow get: if isVerifiedUser() && isValidId(clientId) && (resource == null || existing().ownerId == request.auth.uid);
       allow list: if isVerifiedUser() && existing().ownerId == request.auth.uid;
       allow create: if isVerifiedUser() &&
         isValidId(clientId) &&

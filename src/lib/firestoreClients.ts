@@ -461,35 +461,43 @@ export async function updateClientInFirestore(
   if (!db) return;
   const safeId = sanitizeId(client.id);
   const path = `clients/${safeId}`;
-  const fields = buildMutableClientFields({ ...client, id: safeId }, userId);
-  // Exclude immutable identity keys on update
-  delete fields.id;
-  delete fields.ownerId;
+  const docRef = doc(db, 'clients', safeId);
+  const fullMutable = buildMutableClientFields({ ...client, id: safeId }, userId);
 
   try {
-    await updateDoc(doc(db, 'clients', safeId), {
-      ...fields,
-      updatedAt: serverTimestamp(),
-    });
-  } catch (error) {
-    const code =
-      typeof error === 'object' && error !== null && 'code' in error
-        ? String((error as { code?: string }).code)
-        : '';
-    const msg = error instanceof Error ? error.message.toLowerCase() : '';
-    if (code === 'not-found' || msg.includes('no document to update')) {
-      try {
-        const createPayload = {
-          ...buildMutableClientFields({ ...client, id: safeId }, userId),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-        await setDoc(doc(db, 'clients', safeId), createPayload);
-        return;
-      } catch (createErr) {
-        handleFirestoreError(createErr, OperationType.WRITE, path);
-      }
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) {
+      await setDoc(docRef, {
+        ...fullMutable,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      return;
     }
+
+    const fields = { ...fullMutable };
+    // Exclude immutable identity keys on update
+    delete fields.id;
+    delete fields.ownerId;
+
+    try {
+      await updateDoc(docRef, {
+        ...fields,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (updateErr) {
+      const existingData = snap.data();
+      if (existingData?.createdAt instanceof Timestamp) {
+        await setDoc(docRef, {
+          ...fullMutable,
+          createdAt: existingData.createdAt,
+          updatedAt: serverTimestamp(),
+        });
+        return;
+      }
+      throw updateErr;
+    }
+  } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
 }
