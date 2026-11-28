@@ -320,5 +320,109 @@ export const openChatGptSearch = (criteria: PropertySearchCriteria): void => {
   window.open(url, '_blank', 'noopener,noreferrer');
 };
 
+export interface SellerCmaPromptInput {
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  propertyType?: string;
+  beds?: number;
+  baths?: number;
+  sqft?: number;
+  lotSize?: string;
+  yearBuilt?: number;
+  stories?: string;
+  garageSpaces?: string;
+  condition?: string;
+  upgradesAndFeatures?: string;
+  reasonForSelling?: string;
+  desiredTimeline?: string;
+}
+
+/**
+ * Generates an expert Real Estate Comparative Market Analysis (CMA) prompt
+ * strictly anchored to comps within a 2-mile radius from the last 4 months,
+ * returning 3 pricing tiers (Competitive/Quick Sale, Fair Market, Aspirational),
+ * formatted cleanly, and including a branded PDF using the app's exact colors and fonts.
+ */
+export const buildSellerCmaPrompt = (property: SellerCmaPromptInput): string => {
+  const locationParts = [
+    property.address?.trim(),
+    property.city?.trim(),
+    [property.state?.trim(), property.zipCode?.trim()].filter(Boolean).join(' '),
+  ].filter(Boolean);
+
+  const subjectAddress =
+    locationParts.length > 0 ? locationParts.join(', ') : 'the subject property';
+
+  const specs: string[] = [];
+  if (property.propertyType) specs.push(`Property Type: ${property.propertyType}`);
+  if (property.beds !== undefined && property.beds > 0) specs.push(`Bedrooms: ${property.beds}`);
+  if (property.baths !== undefined && property.baths > 0) specs.push(`Bathrooms: ${property.baths}`);
+  if (property.sqft !== undefined && property.sqft > 0) {
+    specs.push(`Living Area: ${property.sqft.toLocaleString()} sq ft`);
+  }
+  if (property.lotSize?.trim()) specs.push(`Lot Size: ${property.lotSize.trim()}`);
+  if (property.yearBuilt && property.yearBuilt > 0) specs.push(`Year Built: ${property.yearBuilt}`);
+  if (property.stories && property.stories !== 'Any') specs.push(`Stories: ${property.stories}`);
+  if (property.garageSpaces?.trim()) specs.push(`Garage / Parking: ${property.garageSpaces.trim()}`);
+  if (property.condition?.trim()) specs.push(`Condition: ${property.condition.trim()}`);
+  if (property.upgradesAndFeatures?.trim()) {
+    specs.push(`Upgrades & Features: ${property.upgradesAndFeatures.trim()}`);
+  }
+  if (property.desiredTimeline?.trim()) {
+    specs.push(`Target Timeline: ${property.desiredTimeline.trim()}`);
+  }
+  if (property.reasonForSelling?.trim()) {
+    specs.push(`Seller Context: ${property.reasonForSelling.trim()}`);
+  }
+
+  const minSqftMatch =
+    property.sqft && property.sqft > 0 ? Math.round(property.sqft * 0.85).toLocaleString() : 'similar';
+  const maxSqftMatch =
+    property.sqft && property.sqft > 0 ? Math.round(property.sqft * 1.15).toLocaleString() : 'similar';
+  const sqftWindow =
+    property.sqft && property.sqft > 0 ? `${minSqftMatch}–${maxSqftMatch} sq ft (±15%)` : 'similar sq ft';
+
+  return [
+    `Act as an expert residential real estate appraiser and listing pricing strategist. Prepare a crystal-clear, highly organized Comparative Market Analysis (CMA) for this subject property:`,
+    ``,
+    `SUBJECT PROPERTY:`,
+    `- Address / Location: ${subjectAddress}`,
+    specs.length > 0 ? specs.map((s) => `- ${s}`).join('\n') : `- Standard residential home`,
+    ``,
+    `STRICT COMPARABLE SELECTION RULES:`,
+    `1. Radius: Strictly within a 2-mile radius of ${subjectAddress}.`,
+    `2. Timeframe: Closed/Sold comps within the last 4 months ONLY (most recent prioritized), plus current Active and Pending competing listings within 2 miles.`,
+    `3. Same Criteria & Size: Same property type (${property.propertyType || 'same property type'}), similar beds/baths, similar living area (${sqftWindow}), lot size, and condition.`,
+    `4. Include Zillow or Redfin links for each comp when available.`,
+    ``,
+    `PRESENTATION & ORGANIZATION (KEEP IT CLEAN & SCANNABLE):`,
+    `- Organize your response into clearly numbered sections with bold headings, clean tables, and concise bullet points (no cluttered paragraphs).`,
+    `- Section 1 — Subject Property & Pricing Snapshot (at-a-glance summary).`,
+    `- Section 2 — Comparable Properties Table (Sold in last 4 months + Pending + Active within 2 miles) with columns: Address | Status | Distance | Date | Price | $/Sq Ft | Beds/Baths | Sq Ft | DOM | Key Differences/Link.`,
+    `- Section 3 — Market & Valuation Breakdown: Median & average $/Sq Ft, average DOM, and specific upward/downward adjustments for our subject property's condition, lot, and upgrades.`,
+    `- Section 4 — Three Recommended Listing Prices (with exact dollar figures, $/Sq Ft, expected DOM, and clear rationale):`,
+    `  1. Competitive / Quick-Sale Price (Under Market Value): Priced below market to trigger immediate buyer urgency, maximum showings, multiple offers, and a fast sale.`,
+    `  2. Fair Market Price (Market Value): Accurate data-backed market price aligned with the 4-month, 2-mile comparable sales.`,
+    `  3. Aspirational Price (Slightly Over Market Value): Stretch list price to test top buyer demand, plus likely DOM impact and recommended price-reduction trigger.`,
+    `- Section 5 — Seller Presentation Talking Points: 3–4 short, client-friendly bullets ready to review live with the seller.`,
+    ``,
+    `DELIVERABLE — BRANDED PDF REPORT:`,
+    `- Also generate and provide a downloadable, client-ready PDF report styled with our exact brand palette and typography:`,
+    `  * Colors: Deep Slate-Teal #244B52 (headers & table headers), Dark Ink #203B40 (primary text), Warm Paper-Cream #FFFDF8 & Linen #F7F4EC (backgrounds), Soft Sage #E9EDE4 (highlight cards & Fair Market box), Warm Amber-Gold #C48C4E / #A27B4D (accents, section kickers, Competitive box), Linen Borders #E8E3D8, Muted Slate #5E706E (captions).`,
+    `  * Fonts: Use Manrope (bold/semibold, geometric) for headings and price callouts, and DM Sans (clean, aligned numerals) for body text and tables (or closest embedded clean geometric sans-serif fallback if unavailable).`,
+    `  * Layout: Clean 2–3 page editorial layout with generous margins, a Deep Slate-Teal header banner, 3 side-by-side pricing tier cards, the formatted comps table, and the seller talking points.`,
+  ].join('\n');
+};
+
+/**
+ * Builds a pre-filled ChatGPT CMA Search URL for a seller's subject property
+ */
+export const buildSellerCmaChatGptUrl = (property: SellerCmaPromptInput): string => {
+  const prompt = buildSellerCmaPrompt(property);
+  return `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
+};
+
 export type RedfinCriteria = PropertySearchCriteria;
 export const buildRedfinSearchQueryUrl = buildRedfinSearchUrl;

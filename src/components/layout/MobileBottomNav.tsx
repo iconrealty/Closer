@@ -23,6 +23,8 @@ import {
   RotateCcw,
   Check,
   LogOut,
+  KeyRound,
+  Tag,
 } from 'lucide-react';
 import type { GoogleSessionUser } from '../../lib/firebaseAuth';
 
@@ -74,6 +76,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const underContractCount = clients.filter((c) => c.stage === 'under_contract').length;
   const closedCount = clients.filter((c) => c.stage === 'closed').length;
   const allActiveCount = clients.filter((c) => c.stage !== 'closed').length;
+  const buyersCount = clients.filter(
+    (c) => c.type === 'buyer' || c.type === 'buyer_seller'
+  ).length;
+  const sellersCount = clients.filter(
+    (c) => c.type === 'seller' || c.type === 'buyer_seller'
+  ).length;
   const totalPropertiesCount = clients.reduce(
     (sum, c) => sum + (c.sentProperties?.length || 0),
     0
@@ -84,6 +92,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const isDashboardActive = selectedFolder === 'dashboard';
   const isTodayActive = selectedFolder === 'follow_through';
   const isClientsActive =
+    selectedFolder === 'buyers' ||
+    selectedFolder === 'sellers' ||
     selectedFolder === 'all_inbox' ||
     selectedFolder === 'inbox' ||
     selectedFolder === 'overdue' ||
@@ -330,6 +340,37 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                     <Kanban className="w-5 h-5 text-olive-700" />
                     <span>Pipeline Board</span>
                   </div>
+                </button>
+              </div>
+
+              {/* Buyers & Sellers Separate Views */}
+              <div className="space-y-1.5 pt-2 border-t border-tan-200">
+                <div className="px-2 text-xs font-semibold uppercase tracking-wider text-tan-500">
+                  Buyers &amp; Sellers
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleNavigate('buyers')}
+                  className={sheetRowClass(selectedFolder === 'buyers')}
+                >
+                  <div className="flex items-center gap-3">
+                    <KeyRound className="w-5 h-5 text-olive-700" />
+                    <span>Buyers Only</span>
+                  </div>
+                  <span className="text-sm tabular-nums text-tan-500">{buyersCount}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleNavigate('sellers')}
+                  className={sheetRowClass(selectedFolder === 'sellers')}
+                >
+                  <div className="flex items-center gap-3">
+                    <Tag className="w-5 h-5 text-amber-700" />
+                    <span>Sellers Only</span>
+                  </div>
+                  <span className="text-sm tabular-nums text-tan-500">{sellersCount}</span>
                 </button>
               </div>
 

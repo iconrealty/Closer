@@ -43,6 +43,14 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
   const [nextFollowUpNote, setNextFollowUpNote] = useState('Initial follow-up call & inquiry review');
   const [lastContactedDate, setLastContactedDate] = useState(() => new Date().toISOString().split('T')[0]);
 
+  // Seller Property Quick-Start Fields
+  const [sellerAddress, setSellerAddress] = useState('');
+  const [sellerCity, setSellerCity] = useState('');
+  const [sellerPropType, setSellerPropType] = useState('Single Family');
+  const [sellerBeds, setSellerBeds] = useState(3);
+  const [sellerBaths, setSellerBaths] = useState(2);
+  const [sellerSqft, setSellerSqft] = useState('1,800');
+
   const [formError, setFormError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -69,10 +77,43 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
       };
     }
 
-    const safeMin = Number.isFinite(targetPriceMin) ? Math.max(0, targetPriceMin) : 400000;
-    const safeMax = Number.isFinite(targetPriceMax)
-      ? Math.max(safeMin, targetPriceMax)
-      : Math.max(safeMin, 600000);
+    const safeMin =
+      type === 'seller'
+        ? 0
+        : Number.isFinite(targetPriceMin)
+        ? Math.max(0, targetPriceMin)
+        : 400000;
+    const safeMax =
+      type === 'seller'
+        ? 0
+        : Number.isFinite(targetPriceMax)
+        ? Math.max(safeMin, targetPriceMax)
+        : Math.max(safeMin, 600000);
+
+    const parsedSellerSqft = Number(sellerSqft.replace(/\D/g, '')) || 1800;
+    const sellerCityClean = sellerCity.trim() || locations[0] || '';
+    const sellerProperty =
+      type === 'seller' || type === 'buyer_seller'
+        ? {
+            address: sellerAddress.trim(),
+            city: sellerCityClean,
+            state: 'CA',
+            propertyType: sellerPropType || 'Single Family',
+            beds: sellerBeds || 3,
+            baths: sellerBaths || 2,
+            sqft: parsedSellerSqft,
+            reasonForSelling: criteriaNotes.trim() || undefined,
+          }
+        : undefined;
+
+    const resolvedLocations =
+      type === 'seller'
+        ? sellerCityClean
+          ? [sellerCityClean]
+          : []
+        : locations.length > 0
+        ? locations
+        : ['Metropolitan Area'];
 
     const newClient = addClient({
       firstName: firstName.trim(),
@@ -88,7 +129,9 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
       targetPriceMin: safeMin,
       targetPriceMax: safeMax,
       minSqft: 500,
-      locations: locations.length > 0 ? locations : ['Metropolitan Area'],
+      locations: resolvedLocations,
+      primaryLocation: resolvedLocations[0],
+      sellerProperty,
       criteriaNotes: criteriaNotes.trim(),
       preApproved,
       lenderName: preApproved ? lenderName.trim() : undefined,
@@ -364,42 +407,134 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onClien
             </div>
           </div>
 
-          {/* Linear Budget Range Slider with Dots */}
-          <div className="bg-tan-50 border border-tan-200 rounded-xl sm:rounded-lg p-3.5 space-y-2">
-            <span className="text-xs sm:text-[11px] font-bold text-olive-900 uppercase tracking-wider block">
-              Budget Range (Min – Max)
-            </span>
-            <BudgetRangeSlider
-              min={targetPriceMin}
-              max={targetPriceMax}
-              onChange={(newMin, newMax) => {
-                setTargetPriceMin(newMin);
-                setTargetPriceMax(newMax);
-              }}
-            />
-          </div>
+          {(type === 'seller' || type === 'buyer_seller') && (
+            <div className="bg-tan-50 border border-tan-200 rounded-xl sm:rounded-lg p-3.5 space-y-3">
+              <span className="text-xs sm:text-[11px] font-bold text-olive-900 uppercase tracking-wider block">
+                Seller Subject Property Information
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-olive-900 mb-1 font-semibold">
+                    Property Address
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1428 Oakridge Terrace"
+                    value={sellerAddress}
+                    onChange={(e) => setSellerAddress(e.target.value)}
+                    className="w-full min-h-[42px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-olive-900 mb-1 font-semibold">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Irvine"
+                    value={sellerCity}
+                    onChange={(e) => setSellerCity(e.target.value)}
+                    className="w-full min-h-[42px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div>
+                  <label className="block text-olive-900 mb-1 font-semibold">Type</label>
+                  <select
+                    value={sellerPropType}
+                    onChange={(e) => setSellerPropType(e.target.value)}
+                    className="w-full min-h-[40px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-2.5 py-1.5 text-base sm:text-xs text-olive-900 focus:outline-none focus:border-olive-700"
+                  >
+                    <option value="Single Family">Single Family</option>
+                    <option value="Townhouse">Townhouse</option>
+                    <option value="Condo">Condo</option>
+                    <option value="Multi-Family">Multi-Family</option>
+                    <option value="Land / Lot">Land / Lot</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-olive-900 mb-1 font-semibold">Beds</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={sellerBeds}
+                    onChange={(e) => setSellerBeds(Number(e.target.value))}
+                    className="w-full min-h-[40px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-2.5 py-1.5 text-base sm:text-xs text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-olive-900 mb-1 font-semibold">Baths</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={sellerBaths}
+                    onChange={(e) => setSellerBaths(Number(e.target.value))}
+                    className="w-full min-h-[40px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-2.5 py-1.5 text-base sm:text-xs text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-olive-900 mb-1 font-semibold">Sq Ft</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={sellerSqft}
+                    onChange={(e) => {
+                      const d = e.target.value.replace(/\D/g, '');
+                      setSellerSqft(d ? Number(d).toLocaleString('en-US') : '');
+                    }}
+                    className="w-full min-h-[40px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-2.5 py-1.5 text-base sm:text-xs text-olive-900 tabular-nums focus:outline-none focus:border-olive-700"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* Locations & Criteria */}
+          {type !== 'seller' && (
+            <>
+              {/* Linear Budget Range Slider with Dots */}
+              <div className="bg-tan-50 border border-tan-200 rounded-xl sm:rounded-lg p-3.5 space-y-2">
+                <span className="text-xs sm:text-[11px] font-bold text-olive-900 uppercase tracking-wider block">
+                  {type === 'buyer_seller' ? 'Purchase Budget Range (Min – Max)' : 'Budget Range (Min – Max)'}
+                </span>
+                <BudgetRangeSlider
+                  min={targetPriceMin}
+                  max={targetPriceMax}
+                  onChange={(newMin, newMax) => {
+                    setTargetPriceMin(newMin);
+                    setTargetPriceMax(newMax);
+                  }}
+                />
+              </div>
+
+              {/* Locations & Criteria */}
+              <div>
+                <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
+                  Target Neighborhoods / Cities (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Irvine, Newport Beach, Laguna Beach"
+                  value={locationsInput}
+                  onChange={(e) => setLocationsInput(e.target.value)}
+                  className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2.5 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
+                />
+              </div>
+            </>
+          )}
+
           <div>
             <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
-              Target Neighborhoods / Cities (comma-separated)
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Irvine, Newport Beach, Laguna Beach"
-              value={locationsInput}
-              onChange={(e) => setLocationsInput(e.target.value)}
-              className="w-full min-h-[44px] sm:min-h-0 bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2.5 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"
-            />
-          </div>
-
-          <div>
-            <label className="block text-olive-900 mb-1.5 sm:mb-1 font-semibold">
-              The Reason for their move
+              {type === 'seller' ? 'Reason for Selling & Property Notes' : 'The Reason for their move'}
             </label>
             <textarea
               rows={2}
-              placeholder="e.g. Outgrowing current home, closer to schools or family, relocating for work..."
+              placeholder={
+                type === 'seller'
+                  ? 'e.g. Downsizing after retirement, remodeled kitchen, wants to list in 45 days...'
+                  : 'e.g. Outgrowing current home, closer to schools or family, relocating for work...'
+              }
               value={criteriaNotes}
               onChange={(e) => setCriteriaNotes(e.target.value)}
               className="w-full bg-cream border border-tan-300 rounded-lg sm:rounded px-3 py-2.5 sm:py-2 text-base sm:text-xs text-olive-900 placeholder:text-tan-400 focus:outline-none focus:border-olive-700"

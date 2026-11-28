@@ -41,6 +41,9 @@ interface CrmContextType {
   brandColor: 'blue' | 'emerald' | 'indigo' | 'charcoal';
   setBrandColor: (color: 'blue' | 'emerald' | 'indigo' | 'charcoal') => void;
 
+  syncError: string | null;
+  clearSyncError: () => void;
+
   // Actions
   addClient: (
     newClientData: Omit<Client, 'id' | 'createdAt' | 'activity' | 'lastContactedAt' | 'name'> & {
@@ -48,7 +51,7 @@ interface CrmContextType {
       lastContactedAt?: string;
     }
   ) => Client;
-  updateClient: (id: string, updates: Partial<Client>) => void;
+  updateClient: (id: string, updates: Partial<Client>) => Promise<boolean>;
   deleteClient: (id: string) => void;
   updateStage: (id: string, newStage: ClientStage) => void;
   logActivity: (
@@ -171,7 +174,11 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
   const [isCloudReady, setIsCloudReady] = useState<boolean>(
     () => Boolean(db && auth?.currentUser?.uid === userId && auth.currentUser.emailVerified)
   );
+  const [syncError, setSyncError] = useState<string | null>(null);
   const hasMigratedLocalRef = useRef<boolean>(false);
+  const pendingUpsertIdsRef = useRef<Set<string>>(new Set());
+
+  const clearSyncError = () => setSyncError(null);
 
   const triggerUnsavedCriteriaWarning = () => {
     setUnsavedCriteriaWarningTick((prev) => prev + 1);
@@ -201,9 +208,28 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     return unsubAuth;
   }, [userId]);
 
-  // Real-time Firestore listener (cross-device sync)
+  // Real-time Firestore listener (cross-device sync) + flush any queued pre-auth edits
   useEffect(() => {
     if (!isCloudReady || !db) return;
+
+    const flushPendingWrites = async () => {
+      if (pendingUpsertIdsRef.current.size === 0) return;
+      const ids = Array.from(pendingUpsertIdsRef.current);
+      pendingUpsertIdsRef.current.clear();
+      for (const id of ids) {
+        const target = clientsRef.current.find((c) => c.id === id);
+        if (!target) continue;
+        try {
+          await updateClientInFirestore(target, userId);
+        } catch (err) {
+          console.error('Queued Firestore sync failed:', err);
+          pendingUpsertIdsRef.current.add(id);
+          setSyncError('Could not save your latest changes to the cloud. Please try saving again.');
+        }
+      }
+    };
+
+    void flushPendingWrites();
 
     const unsubSnapshot = subscribeToUserClients(userId, (remoteClients) => {
       if (remoteClients.length === 0 && !hasMigratedLocalRef.current) {
@@ -216,14 +242,18 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
         }
         const localSeed = readCachedClients(storageKey);
         if (!alreadyMigrated && localSeed.length > 0) {
-          try {
-            localStorage.setItem(migratedKey, '1');
-          } catch {
-            // Ignore storage errors
-          }
-          void batchImportClientsInFirestore(localSeed, userId).catch((err) => {
-            console.error('Local-to-cloud migration error:', err);
-          });
+          void batchImportClientsInFirestore(localSeed, userId)
+            .then(() => {
+              try {
+                localStorage.setItem(migratedKey, '1');
+              } catch {
+                // Ignore storage errors
+              }
+            })
+            .catch((err) => {
+              console.error('Local-to-cloud migration error:', err);
+              setSyncError('Could not finish syncing local clients to the cloud.');
+            });
           return;
         }
       } else if (remoteClients.length > 0) {
@@ -235,8 +265,22 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
         }
       }
 
-      clientsRef.current = remoteClients;
-      setClients(remoteClients);
+      // Preserve any locally queued unsynced clients so onSnapshot doesn't wipe them mid-flush
+      const pendingIds = pendingUpsertIdsRef.current;
+      let mergedClients = remoteClients;
+      if (pendingIds.size > 0) {
+        const remoteIds = new Set(remoteClients.map((c) => c.id));
+        const localPending = clientsRef.current.filter((c) => pendingIds.has(c.id));
+        mergedClients = [
+          ...localPending.filter((c) => !remoteIds.has(c.id)),
+          ...remoteClients.map((rc) =>
+            pendingIds.has(rc.id) ? localPending.find((lc) => lc.id === rc.id) || rc : rc
+          ),
+        ];
+      }
+
+      clientsRef.current = mergedClients;
+      setClients(mergedClients);
     });
 
     return unsubSnapshot;
@@ -256,10 +300,10 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     setSelectedClientId(client ? client.id : null);
   };
 
-  const applyAndSyncClientUpdate = (
+  const applyAndSyncClientUpdate = async (
     id: string,
     updater: (current: Client) => Client
-  ) => {
+  ): Promise<boolean> => {
     let updatedClient: Client | null = null;
     const nextClients = clientsRef.current.map((c) => {
       if (c.id === id) {
@@ -271,10 +315,21 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     clientsRef.current = nextClients;
     setClients(nextClients);
 
-    if (updatedClient && isCloudReady) {
-      void updateClientInFirestore(updatedClient, userId).catch((err) => {
-        console.error('Firestore update failed:', err);
-      });
+    if (!updatedClient) return false;
+
+    if (!isCloudReady) {
+      pendingUpsertIdsRef.current.add(id);
+      return true;
+    }
+
+    try {
+      await updateClientInFirestore(updatedClient, userId);
+      setSyncError(null);
+      return true;
+    } catch (err) {
+      console.error('Firestore update failed:', err);
+      setSyncError('Changes could not be saved to your database. Please check your connection and save again.');
+      return false;
     }
   };
 
@@ -312,14 +367,18 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     if (isCloudReady) {
       void createClientInFirestore(newClient, userId).catch((err) => {
         console.error('Firestore create failed:', err);
+        pendingUpsertIdsRef.current.add(newClient.id);
+        setSyncError('New client saved locally, retrying cloud sync...');
       });
+    } else {
+      pendingUpsertIdsRef.current.add(newClient.id);
     }
 
     return newClient;
   };
 
-  const updateClient = (id: string, updates: Partial<Client>) => {
-    applyAndSyncClientUpdate(id, (client) => {
+  const updateClient = (id: string, updates: Partial<Client>): Promise<boolean> => {
+    return applyAndSyncClientUpdate(id, (client) => {
       const merged = { ...client, ...updates };
       return { ...merged, name: formatClientDisplayName(merged) };
     });
@@ -815,6 +874,8 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
         setSearchQuery,
         brandColor,
         setBrandColor,
+        syncError,
+        clearSyncError,
         addClient,
         updateClient,
         deleteClient,

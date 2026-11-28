@@ -19,6 +19,8 @@ import {
   ClientStage,
   ClientType,
   Priority,
+  SellerCmaComp,
+  SellerPropertyInfo,
   formatClientDisplayName,
   normalizeLeadSource,
 } from '../types/crm';
@@ -68,6 +70,100 @@ function stripUndefined<T>(value: T): T {
     return out as T;
   }
   return value;
+}
+
+function finiteNumberOrUndefined(val: unknown): number | undefined {
+  return typeof val === 'number' && Number.isFinite(val) ? val : undefined;
+}
+
+function sanitizeSellerProperty(raw: unknown): SellerPropertyInfo | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const src = raw as Record<string, unknown>;
+  const out: SellerPropertyInfo = {
+    address: clampString(src.address, 240).trim(),
+    city: clampString(src.city, 120).trim(),
+    propertyType: clampString(src.propertyType, 60).trim() || 'Single Family',
+    beds: finiteNumberOrUndefined(src.beds) ?? 3,
+    baths: finiteNumberOrUndefined(src.baths) ?? 2,
+    sqft: finiteNumberOrUndefined(src.sqft) ?? 1800,
+  };
+
+  const state = clampString(src.state, 40).trim();
+  if (state) out.state = state;
+  const zipCode = clampString(src.zipCode, 20).trim();
+  if (zipCode) out.zipCode = zipCode;
+  const lotSize = clampString(src.lotSize, 80).trim();
+  if (lotSize) out.lotSize = lotSize;
+  const yearBuilt = finiteNumberOrUndefined(src.yearBuilt);
+  if (yearBuilt !== undefined && yearBuilt > 0) out.yearBuilt = yearBuilt;
+  const stories = clampString(src.stories, 60).trim();
+  if (stories) out.stories = stories;
+  const garageSpaces = clampString(src.garageSpaces, 40).trim();
+  if (garageSpaces) out.garageSpaces = garageSpaces;
+  const condition = clampString(src.condition, 80).trim();
+  if (condition) out.condition = condition;
+  const upgrades = clampString(src.upgradesAndFeatures, 3000).trim();
+  if (upgrades) out.upgradesAndFeatures = upgrades;
+  const reason = clampString(src.reasonForSelling, 1500).trim();
+  if (reason) out.reasonForSelling = reason;
+  const timeline = clampString(src.desiredTimeline, 120).trim();
+  if (timeline) out.desiredTimeline = timeline;
+  const competitivePrice = finiteNumberOrUndefined(src.competitivePrice);
+  if (competitivePrice !== undefined && competitivePrice >= 0) out.competitivePrice = competitivePrice;
+  const marketPrice = finiteNumberOrUndefined(src.marketPrice);
+  if (marketPrice !== undefined && marketPrice >= 0) out.marketPrice = marketPrice;
+  const aspirationalPrice = finiteNumberOrUndefined(src.aspirationalPrice);
+  if (aspirationalPrice !== undefined && aspirationalPrice >= 0) out.aspirationalPrice = aspirationalPrice;
+
+  const cmaSummary = clampString(src.cmaSummary, 6000).trim();
+  if (cmaSummary) out.cmaSummary = cmaSummary;
+
+  if (Array.isArray(src.cmaTalkingPoints)) {
+    const pts = clampStringArray(src.cmaTalkingPoints, 12, 400);
+    if (pts.length > 0) out.cmaTalkingPoints = pts;
+  }
+
+  if (Array.isArray(src.cmaComps)) {
+    const comps: SellerCmaComp[] = src.cmaComps
+      .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'))
+      .slice(0, 25)
+      .map((item, idx) => {
+        const rawStatus = typeof item.status === 'string' ? item.status.trim() : 'Sold';
+        const status: SellerCmaComp['status'] =
+          rawStatus === 'Active' || rawStatus === 'Pending' ? rawStatus : 'Sold';
+        const comp: SellerCmaComp = {
+          id: sanitizeId(typeof item.id === 'string' ? item.id : `comp-${idx}-${Date.now()}`),
+          address: clampString(item.address, 200).trim() || 'Comparable Property',
+          status,
+          price: finiteNumberOrUndefined(item.price) ?? 0,
+          included: item.included !== false,
+        };
+        const dist = clampString(item.distanceMiles, 30).trim();
+        if (dist) comp.distanceMiles = dist;
+        const dt = clampString(item.date, 40).trim();
+        if (dt) comp.date = dt;
+        const sqft = finiteNumberOrUndefined(item.sqft);
+        if (sqft !== undefined && sqft > 0) comp.sqft = sqft;
+        const beds = finiteNumberOrUndefined(item.beds);
+        if (beds !== undefined && beds >= 0) comp.beds = beds;
+        const baths = finiteNumberOrUndefined(item.baths);
+        if (baths !== undefined && baths >= 0) comp.baths = baths;
+        const lotSize = clampString(item.lotSize, 60).trim();
+        if (lotSize) comp.lotSize = lotSize;
+        const yearBuilt = finiteNumberOrUndefined(item.yearBuilt);
+        if (yearBuilt !== undefined && yearBuilt > 0) comp.yearBuilt = yearBuilt;
+        const dom = finiteNumberOrUndefined(item.dom);
+        if (dom !== undefined && dom >= 0) comp.dom = dom;
+        const notes = clampString(item.notes, 400).trim();
+        if (notes) comp.notes = notes;
+        const url = clampString(item.url, 500).trim();
+        if (url) comp.url = url;
+        return comp;
+      });
+    if (comps.length > 0) out.cmaComps = comps;
+  }
+
+  return out;
 }
 
 function buildMutableClientFields(client: Client, userId: string): Record<string, unknown> {
@@ -171,6 +267,12 @@ function buildMutableClientFields(client: Client, userId: string): Record<string
   if (client.propertyOfInterest && typeof client.propertyOfInterest === 'object') {
     payload.propertyOfInterest = stripUndefined(client.propertyOfInterest);
   }
+  if (client.sellerProperty && typeof client.sellerProperty === 'object') {
+    const cleanSeller = sanitizeSellerProperty(client.sellerProperty);
+    if (cleanSeller) {
+      payload.sellerProperty = stripUndefined(cleanSeller);
+    }
+  }
   if (Array.isArray(client.sentProperties)) {
     payload.sentProperties = stripUndefined(client.sentProperties.slice(0, 200));
   }
@@ -254,6 +356,10 @@ export function fromFirestoreClient(data: Record<string, unknown>): Client {
     propertyOfInterest:
       data.propertyOfInterest && typeof data.propertyOfInterest === 'object'
         ? (data.propertyOfInterest as Client['propertyOfInterest'])
+        : undefined,
+    sellerProperty:
+      data.sellerProperty && typeof data.sellerProperty === 'object'
+        ? sanitizeSellerProperty(data.sellerProperty)
         : undefined,
     sentProperties: Array.isArray(data.sentProperties)
       ? (data.sentProperties as Client['sentProperties'])
@@ -366,6 +472,24 @@ export async function updateClientInFirestore(
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
+    const code =
+      typeof error === 'object' && error !== null && 'code' in error
+        ? String((error as { code?: string }).code)
+        : '';
+    const msg = error instanceof Error ? error.message.toLowerCase() : '';
+    if (code === 'not-found' || msg.includes('no document to update')) {
+      try {
+        const createPayload = {
+          ...buildMutableClientFields({ ...client, id: safeId }, userId),
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+        await setDoc(doc(db, 'clients', safeId), createPayload);
+        return;
+      } catch (createErr) {
+        handleFirestoreError(createErr, OperationType.WRITE, path);
+      }
+    }
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
 }

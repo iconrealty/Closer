@@ -211,6 +211,10 @@
           "type": "object",
           "description": "Highlighted property of interest."
         },
+        "sellerProperty": {
+          "type": "object",
+          "description": "Seller subject property information, CMA pricing tiers, comps, and presentation notes."
+        },
         "sentProperties": {
           "type": "array",
           "description": "Properties tracked/shown to the client (max 200)."

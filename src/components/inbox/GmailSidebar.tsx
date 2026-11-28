@@ -15,12 +15,16 @@ import {
   LayoutGrid,
   CheckCircle2,
   MessageCircle,
+  KeyRound,
+  Tag,
 } from 'lucide-react';
 
 export type GmailFolderId =
   | 'dashboard'
   | 'follow_through'
   | 'little_moments'
+  | 'buyers'
+  | 'sellers'
   | 'all_inbox'
   | 'inbox'
   | 'overdue'
@@ -71,6 +75,12 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
   const underContractCount = clients.filter((c) => c.stage === 'under_contract').length;
   const closedCount = clients.filter((c) => c.stage === 'closed').length;
   const allActiveCount = clients.filter((c) => c.stage !== 'closed').length;
+  const buyersCount = clients.filter(
+    (c) => c.type === 'buyer' || c.type === 'buyer_seller'
+  ).length;
+  const sellersCount = clients.filter(
+    (c) => c.type === 'seller' || c.type === 'buyer_seller'
+  ).length;
 
   const totalPropertiesToShow = clients.reduce(
     (sum, c) => sum + (c.sentProperties?.length || 0),
@@ -151,6 +161,36 @@ export const GmailSidebar: React.FC<GmailSidebarProps> = ({
             <MessageCircle className={iconClass(selectedFolder === 'little_moments')} />
             <span>Little Moments</span>
           </div>
+        </button>
+
+        <div className="my-1.5 border-t border-white/12" />
+
+        <div className="px-3 py-1 text-[10px] font-semibold tracking-wider text-olive-200/65 uppercase">
+          Buyers &amp; Sellers
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handleFolderClick('buyers')}
+          className={navItemClass(selectedFolder === 'buyers')}
+        >
+          <div className="flex items-center gap-2.5">
+            <KeyRound className={iconClass(selectedFolder === 'buyers')} />
+            <span>Buyers Only</span>
+          </div>
+          <span className="text-[11px] tabular-nums text-olive-200/75">{buyersCount}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleFolderClick('sellers')}
+          className={navItemClass(selectedFolder === 'sellers')}
+        >
+          <div className="flex items-center gap-2.5">
+            <Tag className={iconClass(selectedFolder === 'sellers')} />
+            <span>Sellers Only</span>
+          </div>
+          <span className="text-[11px] tabular-nums text-olive-200/75">{sellersCount}</span>
         </button>
 
         <div className="my-1.5 border-t border-white/12" />

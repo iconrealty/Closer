@@ -125,6 +125,49 @@ export interface SecondaryContact {
   relationship: string; // e.g. 'Spouse', 'Partner', 'Co-Buyer', 'Co-Borrower', 'Family', 'Investor Partner'
 }
 
+export interface SellerCmaComp {
+  id: string;
+  address: string;
+  status: 'Sold' | 'Pending' | 'Active';
+  distanceMiles?: string;
+  date?: string;
+  price: number;
+  sqft?: number;
+  beds?: number;
+  baths?: number;
+  lotSize?: string;
+  yearBuilt?: number;
+  dom?: number;
+  notes?: string;
+  url?: string;
+  included?: boolean;
+}
+
+export interface SellerPropertyInfo {
+  address: string;
+  city: string;
+  state?: string;
+  zipCode?: string;
+  propertyType: string;
+  beds: number;
+  baths: number;
+  sqft: number;
+  lotSize?: string;
+  yearBuilt?: number;
+  stories?: string;
+  garageSpaces?: string;
+  condition?: string;
+  upgradesAndFeatures?: string;
+  reasonForSelling?: string;
+  desiredTimeline?: string;
+  competitivePrice?: number;
+  marketPrice?: number;
+  aspirationalPrice?: number;
+  cmaSummary?: string;
+  cmaTalkingPoints?: string[];
+  cmaComps?: SellerCmaComp[];
+}
+
 export interface Client {
   id: string;
   // Primary Client
@@ -164,6 +207,7 @@ export interface Client {
   nextFollowUpDate: string; // YYYY-MM-DD
   nextFollowUpNote?: string;
   propertyOfInterest?: PropertyMatch;
+  sellerProperty?: SellerPropertyInfo;
   sentProperties?: SentProperty[];
   underContractDetails?: UnderContractDetails;
   activity: ActivityLog[];

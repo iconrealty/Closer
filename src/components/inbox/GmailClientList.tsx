@@ -16,7 +16,7 @@ import {
   LayoutList,
   Columns,
 } from 'lucide-react';
-import { formatPriceRange, getRelativeDaysLabel } from '../../utils/formatters';
+import { formatPriceRange, formatCurrency, getRelativeDaysLabel } from '../../utils/formatters';
 
 interface GmailClientListProps {
   selectedFolder: GmailFolderId;
@@ -99,6 +99,12 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
         }
         return true;
       }
+      if (selectedFolder === 'buyers') {
+        return c.type === 'buyer' || c.type === 'buyer_seller';
+      }
+      if (selectedFolder === 'sellers') {
+        return c.type === 'seller' || c.type === 'buyer_seller';
+      }
       if (selectedFolder === 'inbox') return c.stage !== 'closed';
       if (selectedFolder === 'overdue') {
         return c.stage !== 'closed' && c.stage !== 'new_lead' && c.nextFollowUpDate < todayStr;
@@ -138,6 +144,8 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           c.email.toLowerCase().includes(q) ||
           c.criteriaNotes.toLowerCase().includes(q) ||
           c.locations.some((l) => l.toLowerCase().includes(q)) ||
+          (c.sellerProperty?.address && c.sellerProperty.address.toLowerCase().includes(q)) ||
+          (c.sellerProperty?.city && c.sellerProperty.city.toLowerCase().includes(q)) ||
           (c.nextFollowUpNote && c.nextFollowUpNote.toLowerCase().includes(q)) ||
           (c.sentProperties &&
             c.sentProperties.some((p) => p.address.toLowerCase().includes(q)));
@@ -263,6 +271,8 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
     dashboard: 'Dashboard',
     follow_through: "Today's Follow-Through",
     little_moments: 'Little Moments',
+    buyers: 'Buyers',
+    sellers: 'Sellers',
     all_inbox: 'All inboxes',
     inbox: 'Primary',
     overdue: 'Catch Up (Overdue)',
@@ -286,6 +296,16 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
     const status = getClientStatus(client);
     const isOverdue = status.isOverdue;
     const isDueToday = status.isToday;
+    const sellerMarketLabel =
+      client.type === 'seller'
+        ? client.sellerProperty?.marketPrice
+          ? formatCurrency(client.sellerProperty.marketPrice)
+          : client.sellerProperty?.address ||
+            client.sellerProperty?.city ||
+            (client.targetPriceMax > 0
+              ? formatPriceRange(client.targetPriceMin, client.targetPriceMax)
+              : 'Property Info')
+        : formatPriceRange(client.targetPriceMin, client.targetPriceMax);
 
     return (
       <div key={client.id} className={isSelected ? 'bg-olive-50/80' : 'bg-cream'}>
@@ -327,7 +347,7 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
                   <span className="capitalize">{client.stage.replace(/_/g, ' ')}</span>
                   <span className="text-tan-300">·</span>
                   <span className="font-semibold text-olive-900 tabular-nums">
-                    {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
+                    {sellerMarketLabel}
                   </span>
                   {propertyCount > 0 && (
                     <>
@@ -356,7 +376,9 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
           </div>
 
           <p className="text-sm text-tan-600 line-clamp-2 leading-snug pl-8">
-            {client.nextFollowUpNote || client.criteriaNotes || 'Follow-up scheduled'}
+            {(client.type === 'seller' || client.type === 'buyer_seller') && client.sellerProperty?.address
+              ? `${client.sellerProperty.address}${client.sellerProperty.city ? `, ${client.sellerProperty.city}` : ''} · ${client.nextFollowUpNote || 'Listing CMA'}`
+              : client.nextFollowUpNote || client.criteriaNotes || 'Follow-up scheduled'}
           </p>
 
           <div
@@ -466,7 +488,9 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
 
             {/* Snippet */}
             <span className="text-tan-500 truncate text-[11px]">
-              {client.nextFollowUpNote || 'Follow-up scheduled'}
+              {(client.type === 'seller' || client.type === 'buyer_seller') && client.sellerProperty?.address
+                ? `${client.sellerProperty.address}${client.sellerProperty.city ? `, ${client.sellerProperty.city}` : ''} · ${client.nextFollowUpNote || 'Follow-up scheduled'}`
+                : client.nextFollowUpNote || 'Follow-up scheduled'}
             </span>
           </div>
 
@@ -479,7 +503,7 @@ export const GmailClientList: React.FC<GmailClientListProps> = ({
               }`}
             >
               <span className="text-olive-900 tabular-nums font-semibold text-xs hidden sm:inline">
-                {formatPriceRange(client.targetPriceMin, client.targetPriceMax)}
+                {sellerMarketLabel}
               </span>
 
               <span

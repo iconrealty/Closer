@@ -14,6 +14,8 @@ import {
 } from '../../types/crm';
 import { SentPropertiesManager } from '../properties/SentPropertiesManager';
 import { ClientCriteriaTab } from '../properties/ClientCriteriaTab';
+import { SellerPropertyTab } from '../properties/SellerPropertyTab';
+import { LiveCmaPage } from '../properties/LiveCmaPage';
 import {
   getRelativeDaysLabel,
   formatTimeAgo,
@@ -29,6 +31,7 @@ import {
   Star,
   Check,
   AlertTriangle,
+  MapPin,
 } from 'lucide-react';
 
 interface ClientDetailPageProps {
@@ -70,14 +73,21 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
     hasUnsavedCriteria,
     unsavedCriteriaWarningTick,
     triggerUnsavedCriteriaWarning,
+    syncError,
+    clearSyncError,
   } = useCrm();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showUnsavedBanner, setShowUnsavedBanner] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<
-    'criteria' | 'properties' | 'follow_up' | 'activity'
-  >('criteria');
+  type DetailTab = 'criteria' | 'seller_property' | 'live_cma' | 'properties' | 'follow_up' | 'activity';
+  const getDefaultTabForType = (t: ClientType): DetailTab =>
+    t === 'seller' || t === 'buyer_seller' ? 'seller_property' : 'criteria';
+
+  const [activeTab, setActiveTab] = useState<DetailTab>(() =>
+    getDefaultTabForType(client.type)
+  );
+  const [isCmaFullscreen, setIsCmaFullscreen] = useState(false);
 
   const [followUpDate, setFollowUpDate] = useState(client.nextFollowUpDate);
   const [followUpNote, setFollowUpNote] = useState(client.nextFollowUpNote || '');
@@ -117,7 +127,8 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    setActiveTab('criteria');
+    setActiveTab(getDefaultTabForType(client.type));
+    setIsCmaFullscreen(false);
     setIsEditingContact(false);
     setIsConfirmingDelete(false);
     setFollowUpDate(client.nextFollowUpDate);
@@ -135,6 +146,18 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
     setEditSecEmail(client.secondaryContact?.email || '');
     setEditSecRelationship(client.secondaryContact?.relationship || 'Spouse');
   }, [client.id]);
+
+  useEffect(() => {
+    if (client.type === 'seller' && activeTab === 'criteria') {
+      setActiveTab('seller_property');
+    } else if (
+      (client.type === 'buyer' || client.type === 'investor') &&
+      (activeTab === 'seller_property' || activeTab === 'live_cma')
+    ) {
+      setActiveTab('criteria');
+      setIsCmaFullscreen(false);
+    }
+  }, [client.type, activeTab]);
 
   useEffect(() => {
     setFollowUpDate(client.nextFollowUpDate);
@@ -162,7 +185,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
     onBack();
   };
 
-  const handleSelectTab = (tab: 'criteria' | 'properties' | 'follow_up' | 'activity') => {
+  const handleSelectTab = (tab: DetailTab) => {
     if (tab !== activeTab && hasUnsavedCriteria) {
       triggerUnsavedCriteriaWarning();
       return;
@@ -240,15 +263,23 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
   return (
     <div
       ref={scrollContainerRef}
-      className="flex-1 flex flex-col min-w-0 min-h-0 bg-tan-50 overflow-y-auto"
+      className="flex-1 flex flex-col min-w-0 min-h-0 bg-tan-50 overflow-y-auto cma-print-flow"
     >
       {/* Sticky Unsaved Search Criteria Block Banner */}
       {showUnsavedBanner && hasUnsavedCriteria && (
-        <div className="bg-rust-700 text-cream text-xs px-5 py-2.5 flex items-center justify-between gap-3 shrink-0 sticky top-0 z-30 shadow-xs">
+        <div className="no-print bg-rust-700 text-cream text-xs px-5 py-2.5 flex items-center justify-between gap-3 shrink-0 sticky top-0 z-30 shadow-xs">
           <span className="flex items-center gap-2 font-medium">
             <AlertTriangle className="w-4 h-4 text-amber-200 shrink-0" />
             <span>
-              You have unsaved search criteria. Click <strong>Save Search Criteria</strong> before searching Zillow/ChatGPT or leaving this page.
+              {activeTab === 'seller_property' ? (
+                <>
+                  You have unsaved property information. Click <strong>Save Property Info</strong> before searching ChatGPT or leaving this page.
+                </>
+              ) : (
+                <>
+                  You have unsaved search criteria. Click <strong>Save Search Criteria</strong> before searching Zillow/ChatGPT or leaving this page.
+                </>
+              )}
             </span>
           </span>
           <button
@@ -262,9 +293,27 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
         </div>
       )}
 
+      {/* Cloud Sync Error Banner */}
+      {syncError && (
+        <div className="no-print bg-rust-700 text-cream text-xs px-5 py-2.5 flex items-center justify-between gap-3 shrink-0 sticky top-0 z-30 shadow-xs">
+          <span className="flex items-center gap-2 font-medium">
+            <AlertTriangle className="w-4 h-4 text-amber-200 shrink-0" />
+            <span>{syncError}</span>
+          </span>
+          <button
+            type="button"
+            onClick={clearSyncError}
+            className="text-rust-100 hover:text-cream cursor-pointer px-1 shrink-0"
+            aria-label="Dismiss sync error"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Subtle inline confirmation banner */}
       {toastMsg && (
-        <div className="bg-olive-800 text-cream text-xs px-5 py-2 flex items-center justify-between shrink-0 sticky top-0 z-20">
+        <div className="no-print bg-olive-800 text-cream text-xs px-5 py-2 flex items-center justify-between shrink-0 sticky top-0 z-20">
           <span className="flex items-center gap-1.5 font-medium">
             <Check className="w-3.5 h-3.5 text-amber-200" />
             {toastMsg}
@@ -282,7 +331,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
 
       <div className="w-full max-w-5xl mx-auto px-4 sm:px-8 pt-4 sm:pt-6 pb-28 md:pb-10 space-y-5">
         {/* 1. Top Backline */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="no-print flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={handleGuardedBack}
@@ -355,7 +404,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
         </div>
 
         {/* 2. Soft Sage Hero Card (.profile-hero) */}
-        <header className="rounded-[10px] bg-olive-50 border border-olive-100 px-5 py-5 sm:px-6 sm:py-5">
+        <header className="no-print rounded-[10px] bg-olive-50 border border-olive-100 px-5 py-5 sm:px-6 sm:py-5">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
             {/* Avatar */}
             <div className="flex items-start gap-3.5 sm:gap-4 min-w-0 flex-1">
@@ -483,6 +532,33 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                     )}
                   </div>
                 )}
+
+                {/* Seller Subject Property Address Line */}
+                {(client.type === 'seller' || client.type === 'buyer_seller') && (() => {
+                  const sp = client.sellerProperty;
+                  const fullAddr = [
+                    sp?.address,
+                    sp?.city,
+                    [sp?.state, sp?.zipCode].filter(Boolean).join(' '),
+                  ]
+                    .filter((part) => Boolean(part && String(part).trim()))
+                    .join(', ');
+
+                  return (
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectTab('seller_property')}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F8F8F1] hover:bg-cream border border-[#D5DDD2] text-xs font-semibold text-[#244B52] transition-colors cursor-pointer"
+                      >
+                        <MapPin className="w-3.5 h-3.5 text-[#A27B4D] shrink-0" />
+                        <span>
+                          {fullAddr || 'No listing address saved yet — click to add'}
+                        </span>
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -685,19 +761,78 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
         {/* 3. Replit-Style Minimalist Tabs (.followup-tabs with #BC8D5C active underline) */}
         <nav
           aria-label="Client details tabs"
-          className="flex items-center border-b border-[#E4DFD4] gap-6 sm:gap-7 text-sm sm:text-[13px] select-none overflow-x-auto no-scrollbar"
+          className="no-print flex items-center border-b border-[#E4DFD4] gap-6 sm:gap-7 text-sm sm:text-[13px] select-none overflow-x-auto no-scrollbar"
         >
-          <button
-            type="button"
-            onClick={() => handleSelectTab('criteria')}
-            className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors cursor-pointer whitespace-nowrap shrink-0 font-semibold ${
-              activeTab === 'criteria'
-                ? 'text-[#2B4A4D] after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
-                : 'text-[#68736D] hover:text-[#2B4A4D]'
-            }`}
-          >
-            Criteria &amp; Search
-          </button>
+          {(client.type === 'seller' || client.type === 'buyer_seller') && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSelectTab('seller_property')}
+                aria-disabled={hasUnsavedCriteria && activeTab !== 'seller_property'}
+                title={
+                  hasUnsavedCriteria && activeTab !== 'seller_property'
+                    ? 'Save changes before switching tabs'
+                    : undefined
+                }
+                className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors whitespace-nowrap shrink-0 font-semibold ${
+                  activeTab === 'seller_property'
+                    ? 'text-[#2B4A4D] cursor-pointer after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
+                    : hasUnsavedCriteria
+                    ? 'text-tan-400 cursor-not-allowed'
+                    : 'text-[#68736D] hover:text-[#2B4A4D] cursor-pointer'
+                }`}
+              >
+                Property Information
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectTab('live_cma')}
+                aria-disabled={hasUnsavedCriteria && activeTab !== 'live_cma'}
+                title={
+                  hasUnsavedCriteria && activeTab !== 'live_cma'
+                    ? 'Save changes before opening Live CMA'
+                    : undefined
+                }
+                className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors whitespace-nowrap shrink-0 font-semibold flex items-center gap-1.5 ${
+                  activeTab === 'live_cma'
+                    ? 'text-[#2B4A4D] cursor-pointer after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
+                    : hasUnsavedCriteria
+                    ? 'text-tan-400 cursor-not-allowed'
+                    : 'text-[#68736D] hover:text-[#2B4A4D] cursor-pointer'
+                }`}
+              >
+                <span>Live CMA</span>
+                {(client.sellerProperty?.cmaComps?.length || 0) > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-[#EFEBE0] text-[#5F6D65] text-[11px] font-semibold tabular-nums">
+                    {client.sellerProperty?.cmaComps?.length}
+                  </span>
+                )}
+              </button>
+            </>
+          )}
+
+          {client.type !== 'seller' && (
+            <button
+              type="button"
+              onClick={() => handleSelectTab('criteria')}
+              aria-disabled={hasUnsavedCriteria && activeTab !== 'criteria'}
+              title={
+                hasUnsavedCriteria && activeTab !== 'criteria'
+                  ? 'Save changes before switching tabs'
+                  : undefined
+              }
+              className={`relative min-h-[44px] sm:min-h-0 py-3 transition-colors whitespace-nowrap shrink-0 font-semibold ${
+                activeTab === 'criteria'
+                  ? 'text-[#2B4A4D] cursor-pointer after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#BC8D5C]'
+                  : hasUnsavedCriteria
+                  ? 'text-tan-400 cursor-not-allowed'
+                  : 'text-[#68736D] hover:text-[#2B4A4D] cursor-pointer'
+              }`}
+            >
+              {client.type === 'buyer_seller' ? 'Buyer Criteria & Search' : 'Criteria & Search'}
+            </button>
+          )}
 
           <button
             type="button"
@@ -756,7 +891,26 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
 
         {/* 4. Tab Workspace Content */}
         <div className="pt-1">
-          {activeTab === 'criteria' && (
+          {activeTab === 'seller_property' && (
+            <div>
+              <SellerPropertyTab
+                client={client}
+                onOpenLiveCma={() => setActiveTab('live_cma')}
+              />
+            </div>
+          )}
+
+          {activeTab === 'live_cma' && (
+            <div>
+              <LiveCmaPage
+                client={client}
+                isFullscreen={isCmaFullscreen}
+                onToggleFullscreen={() => setIsCmaFullscreen((prev) => !prev)}
+              />
+            </div>
+          )}
+
+          {activeTab === 'criteria' && client.type !== 'seller' && (
             <div>
               <ClientCriteriaTab client={client} />
             </div>

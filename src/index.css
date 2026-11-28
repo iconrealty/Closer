@@ -1052,3 +1052,47 @@
   }
 }
 
+/* =========================================================
+   Closer Branded Print / PDF Styles for Live CMA Page
+   ========================================================= */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.45in;
+  }
+
+  html,
+  body,
+  .crm-app-shell,
+  .crm-app-shell main,
+  .cma-print-flow {
+    height: auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+    background: #FFFDF8 !important;
+    color: #203B40 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .cma-print-root {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #FFFDF8 !important;
+  }
+
+  .cma-print-break-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+

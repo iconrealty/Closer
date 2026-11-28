@@ -131,26 +131,28 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
   return (
     <div className="crm-app-shell h-dvh w-screen bg-tan-50 text-olive-900 flex flex-col font-sans selection:bg-olive-700 selection:text-cream overflow-hidden">
       {/* 1. Top Navbar */}
-      <GmailNavbar
-        googleUser={googleUser}
-        onToggleSidebar={() => setIsSidebarOpenMobile((prev) => !prev)}
-        onGoDashboard={handleGuardedGoDashboard}
-        onReturnToLanding={handleGuardedSignOut}
-      />
+      <div className="no-print shrink-0">
+        <GmailNavbar
+          googleUser={googleUser}
+          onToggleSidebar={() => setIsSidebarOpenMobile((prev) => !prev)}
+          onGoDashboard={handleGuardedGoDashboard}
+          onReturnToLanding={handleGuardedSignOut}
+        />
+      </div>
 
       {/* 2. Main 2-Column Layout */}
-      <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
+      <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative cma-print-flow">
         {/* Mobile Sidebar Backdrop */}
         {isSidebarOpenMobile && (
           <div
-            className="fixed inset-0 bg-olive-900/35 z-40 md:hidden backdrop-blur-2xs"
+            className="no-print fixed inset-0 bg-olive-900/35 z-40 md:hidden backdrop-blur-2xs"
             onClick={() => setIsSidebarOpenMobile(false)}
           />
         )}
 
         {/* LEFT COLUMN: Folders & Relevant Information Sidebar (Desktop) */}
         <div
-          className={`fixed md:static inset-y-0 left-0 z-50 md:z-0 transform transition-transform duration-200 ease-in-out md:translate-x-0 ${
+          className={`no-print fixed md:static inset-y-0 left-0 z-50 md:z-0 transform transition-transform duration-200 ease-in-out md:translate-x-0 ${
             isSidebarOpenMobile ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -187,8 +189,10 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
                 />
               )}
 
-              {/* A. Inbox Folders (All Inboxes Beta, Action Queue, Overdue, Today, Stages) */}
-              {(selectedFolder === 'all_inbox' ||
+              {/* A. Inbox & Role Folders (Buyers, Sellers, All Inboxes, Action Queue, Overdue, Today, Stages) */}
+              {(selectedFolder === 'buyers' ||
+                selectedFolder === 'sellers' ||
+                selectedFolder === 'all_inbox' ||
                 selectedFolder === 'inbox' ||
                 selectedFolder === 'overdue' ||
                 selectedFolder === 'today' ||
@@ -238,16 +242,18 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
       </div>
 
       {/* Mobile Floating Bottom Navigation Bar */}
-      <MobileBottomNav
-        googleUser={googleUser}
-        selectedFolder={selectedFolder}
-        onSelectFolder={handleGuardedSelectFolder}
-        selectedPriorityFilter={priorityFilter}
-        onSelectPriorityFilter={setPriorityFilter}
-        selectedTypeFilter={typeFilter}
-        onSelectTypeFilter={setTypeFilter}
-        onReturnToLanding={handleGuardedSignOut}
-      />
+      <div className="no-print">
+        <MobileBottomNav
+          googleUser={googleUser}
+          selectedFolder={selectedFolder}
+          onSelectFolder={handleGuardedSelectFolder}
+          selectedPriorityFilter={priorityFilter}
+          onSelectPriorityFilter={setPriorityFilter}
+          selectedTypeFilter={typeFilter}
+          onSelectTypeFilter={setTypeFilter}
+          onReturnToLanding={handleGuardedSignOut}
+        />
+      </div>
 
       {/* Quick Add Client Modal */}
       {isAddModalOpen && (
