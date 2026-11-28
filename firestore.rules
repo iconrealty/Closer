@@ -205,9 +205,12 @@ service cloud.firestore {
         isValidId(clientId) &&
         existing().ownerId == request.auth.uid &&
         isValidClient(incoming(), clientId) &&
-        incoming().id == existing().id &&
+        (!('id' in existing()) || incoming().id == existing().id) &&
         incoming().ownerId == existing().ownerId &&
-        incoming().createdAt == existing().createdAt &&
+        (
+          (existing().createdAt is timestamp && incoming().createdAt == existing().createdAt) ||
+          (!(existing().createdAt is timestamp) && incoming().createdAt == request.time)
+        ) &&
         incoming().updatedAt == request.time &&
         (
           // Action: Update client profile, criteria, or contact details

@@ -60,6 +60,11 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
     setIsAddModalOpen,
     hasUnsavedCriteria,
     triggerUnsavedCriteriaWarning,
+    syncError,
+    clearSyncError,
+    recoverableDrafts,
+    restoreRecoverableDraft,
+    dismissRecoverableDraft,
   } = useCrm();
 
   const isNavigationLocked = Boolean(selectedClient && hasUnsavedCriteria);
@@ -169,6 +174,59 @@ const CrmAppContent: React.FC<CrmAppContentProps> = ({
 
         {/* CENTER / RIGHT PAGE: Main Workspace or Selected Client Page */}
         <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-cream overflow-hidden">
+          {!selectedClient && syncError && (
+            <div className="no-print mx-4 sm:mx-6 mt-3 bg-rust-50 border border-rust-200 text-rust-900 px-4 py-2.5 rounded-lg flex items-center justify-between gap-3 text-xs font-medium shrink-0">
+              <span>{syncError}</span>
+              <button
+                type="button"
+                onClick={clearSyncError}
+                className="text-rust-700 hover:text-rust-950 font-semibold cursor-pointer"
+                aria-label="Dismiss error"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {!selectedClient && recoverableDrafts.length > 0 && (
+            <div className="no-print mx-4 sm:mx-6 mt-3 bg-amber-50 border border-amber-300 text-olive-900 px-4 py-3 rounded-lg space-y-2 shrink-0">
+              <div className="text-xs font-semibold text-amber-900">
+                Found {recoverableDrafts.length} unsaved or missing client record{recoverableDrafts.length > 1 ? 's' : ''} in this browser:
+              </div>
+              <div className="flex flex-col gap-2">
+                {recoverableDrafts.map((draft) => (
+                  <div
+                    key={draft.id}
+                    className="flex flex-wrap items-center justify-between gap-2 bg-cream border border-amber-200 rounded-md px-3 py-2 text-xs"
+                  >
+                    <div>
+                      <span className="font-semibold text-olive-900">{draft.label}</span>
+                      {draft.sublabel && (
+                        <span className="text-tan-600 ml-2">— {draft.sublabel}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void restoreRecoverableDraft(draft.id)}
+                        className="px-3 py-1 bg-olive-700 hover:bg-olive-800 text-cream font-semibold rounded cursor-pointer"
+                      >
+                        Restore Client
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => dismissRecoverableDraft(draft.id)}
+                        className="px-2 py-1 text-tan-600 hover:text-olive-900 cursor-pointer"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {selectedClient ? (
             <ClientDetailPage
               client={selectedClient}

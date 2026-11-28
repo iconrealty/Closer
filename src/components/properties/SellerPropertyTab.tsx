@@ -74,6 +74,7 @@ export const SellerPropertyTab: React.FC<SellerPropertyTabProps> = ({
     unsavedCriteriaWarningTick,
     triggerUnsavedCriteriaWarning,
     syncError,
+    clearSyncError,
   } = useCrm();
 
   const topBarRef = useRef<HTMLDivElement>(null);
@@ -575,12 +576,15 @@ export const SellerPropertyTab: React.FC<SellerPropertyTabProps> = ({
           </div>
         </div>
 
-        {hasUnsavedChanges && (syncError || unsavedWarningMsg) && (
+        {(syncError || (hasUnsavedChanges && unsavedWarningMsg)) && (
           <div className="bg-rust-50 border border-rust-200 text-rust-800 px-3.5 py-2 rounded-lg flex items-center justify-between gap-2 text-xs font-medium">
             <span>{syncError || unsavedWarningMsg}</span>
             <button
               type="button"
-              onClick={() => setUnsavedWarningMsg(null)}
+              onClick={() => {
+                setUnsavedWarningMsg(null);
+                clearSyncError();
+              }}
               className="text-rust-600 hover:text-rust-900 cursor-pointer px-1"
               aria-label="Dismiss warning"
             >

@@ -23,6 +23,15 @@ import {
 
 const getStorageKey = (userId: string) => `closer_crm_clients_v1_${userId}`;
 const getMigratedKey = (userId: string) => `closer_crm_migrated_v1_${userId}`;
+const getBackupKey = (userId: string) => `closer_crm_backup_v1_${userId}`;
+const SELLER_DRAFT_PREFIX = 'closer_seller_draft_v1_';
+
+export interface RecoverableClientDraft {
+  id: string;
+  label: string;
+  sublabel: string;
+  client: Client;
+}
 
 interface CrmContextType {
   clients: Client[];
@@ -43,6 +52,9 @@ interface CrmContextType {
 
   syncError: string | null;
   clearSyncError: () => void;
+  recoverableDrafts: RecoverableClientDraft[];
+  restoreRecoverableDraft: (id: string) => Promise<void>;
+  dismissRecoverableDraft: (id: string) => void;
 
   // Actions
   addClient: (
@@ -175,7 +187,25 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
   const storageKey = getStorageKey(userId);
   const migratedKey = getMigratedKey(userId);
 
-  const [clients, setClients] = useState<Client[]>(() => readCachedClients(storageKey));
+  const [clients, setClients] = useState<Client[]>(() => {
+    const initial = readCachedClients(storageKey);
+    if (initial.length > 0) {
+      try {
+        const bKey = getBackupKey(userId);
+        const existingRaw = localStorage.getItem(bKey);
+        const existingMap = existingRaw ? (JSON.parse(existingRaw) as Record<string, Client>) : {};
+        initial.forEach((c) => {
+          if (c?.id && !existingMap[c.id]) {
+            existingMap[c.id] = c;
+          }
+        });
+        localStorage.setItem(bKey, JSON.stringify(existingMap));
+      } catch {
+        // Ignore storage errors
+      }
+    }
+    return initial;
+  });
   const clientsRef = useRef<Client[]>(clients);
   clientsRef.current = clients;
 
@@ -194,10 +224,116 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     () => Boolean(db && auth?.currentUser?.uid === userId && auth.currentUser.emailVerified)
   );
   const [syncError, setSyncError] = useState<string | null>(null);
+  const backupKey = getBackupKey(userId);
   const hasMigratedLocalRef = useRef<boolean>(false);
   const pendingUpsertIdsRef = useRef<Set<string>>(new Set());
+  const inFlightCreateRef = useRef<Map<string, Promise<void>>>(new Map());
+  const explicitlyDeletedIdsRef = useRef<Set<string>>(new Set());
+  const [hasLoadedCloudSnapshot, setHasLoadedCloudSnapshot] = useState<boolean>(false);
+  const [recoverableDrafts, setRecoverableDrafts] = useState<RecoverableClientDraft[]>([]);
 
   const clearSyncError = () => setSyncError(null);
+
+  const refreshRecoverableDrafts = (currentClients: Client[], cloudSettled: boolean) => {
+    if (!cloudSettled) return;
+    const activeIds = new Set(currentClients.map((c) => c.id));
+    const found: RecoverableClientDraft[] = [];
+    const seenIds = new Set<string>();
+
+    try {
+      const rawBackup = localStorage.getItem(backupKey);
+      if (rawBackup) {
+        const parsedBackup = JSON.parse(rawBackup) as Record<string, Client>;
+        Object.values(parsedBackup).forEach((c) => {
+          if (c && c.id && !activeIds.has(c.id) && !explicitlyDeletedIdsRef.current.has(c.id)) {
+            seenIds.add(c.id);
+            let draftSeller = c.sellerProperty;
+            try {
+              const rawDraft = sessionStorage.getItem(`${SELLER_DRAFT_PREFIX}${c.id}`);
+              if (rawDraft) {
+                draftSeller = { ...draftSeller, ...JSON.parse(rawDraft) };
+              }
+            } catch {
+              // Ignore storage errors
+            }
+            const restoredClient: Client = draftSeller
+              ? { ...c, sellerProperty: draftSeller }
+              : c;
+            found.push({
+              id: c.id,
+              label: restoredClient.name || 'Recovered Client',
+              sublabel: restoredClient.sellerProperty?.address
+                ? `${restoredClient.sellerProperty.address}${restoredClient.sellerProperty.city ? `, ${restoredClient.sellerProperty.city}` : ''}`
+                : restoredClient.phone || restoredClient.email || 'Backed up record',
+              client: restoredClient,
+            });
+          }
+        });
+      }
+    } catch {
+      // Ignore backup read errors
+    }
+
+    try {
+      for (let i = 0; i < sessionStorage.length; i += 1) {
+        const key = sessionStorage.key(i);
+        if (!key || !key.startsWith(SELLER_DRAFT_PREFIX)) continue;
+        const cid = key.slice(SELLER_DRAFT_PREFIX.length);
+        if (!cid || activeIds.has(cid) || seenIds.has(cid) || explicitlyDeletedIdsRef.current.has(cid)) {
+          continue;
+        }
+        const rawDraft = sessionStorage.getItem(key);
+        if (!rawDraft) continue;
+        const sp = JSON.parse(rawDraft) as Client['sellerProperty'];
+        if (!sp || (!sp.address && !sp.city && !sp.competitivePrice && !sp.marketPrice)) {
+          continue;
+        }
+        const nowIso = new Date().toISOString();
+        const restoredClient: Client = {
+          id: cid,
+          firstName: sp.address ? sp.address.split(' ').slice(0, 2).join(' ') : 'Seller',
+          lastName: 'Lead',
+          name: sp.address ? `Seller (${sp.address})` : 'Recovered Seller',
+          phone: '',
+          email: '',
+          type: 'seller',
+          stage: 'new_lead',
+          priority: 'hot',
+          source: 'Self',
+          targetPriceMin: sp.competitivePrice || sp.marketPrice || 0,
+          targetPriceMax: sp.aspirationalPrice || sp.marketPrice || 0,
+          locations: sp.city ? [sp.city] : [],
+          primaryLocation: sp.city || undefined,
+          sellerProperty: sp,
+          criteriaNotes: sp.reasonForSelling || '',
+          preApproved: false,
+          lastContactedAt: nowIso,
+          nextFollowUpDate: nowIso.split('T')[0],
+          activity: [
+            {
+              id: `act-${Date.now()}`,
+              timestamp: nowIso,
+              type: 'note',
+              summary: 'Recovered from unsaved Seller Property draft',
+            },
+          ],
+          tags: ['Hot Lead', 'seller'],
+          isUnread: true,
+          createdAt: nowIso,
+        };
+        found.push({
+          id: cid,
+          label: restoredClient.name,
+          sublabel: `${sp.address || 'Seller Property'}${sp.city ? `, ${sp.city}` : ''}`,
+          client: restoredClient,
+        });
+      }
+    } catch {
+      // Ignore sessionStorage scan errors
+    }
+
+    setRecoverableDrafts(found);
+  };
 
   const triggerUnsavedCriteriaWarning = () => {
     setUnsavedCriteriaWarningTick((prev) => prev + 1);
@@ -284,8 +420,11 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
         }
       }
 
-      // Preserve any locally queued unsynced clients so onSnapshot doesn't wipe them mid-flush
-      const pendingIds = pendingUpsertIdsRef.current;
+      // Preserve any locally queued or in-flight unsynced clients so onSnapshot doesn't wipe them
+      const pendingIds = new Set<string>([
+        ...pendingUpsertIdsRef.current,
+        ...inFlightCreateRef.current.keys(),
+      ]);
       let mergedClients = remoteClients;
       if (pendingIds.size > 0) {
         const remoteIds = new Set(remoteClients.map((c) => c.id));
@@ -300,19 +439,86 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
 
       clientsRef.current = mergedClients;
       setClients(mergedClients);
+      setHasLoadedCloudSnapshot(true);
+      refreshRecoverableDrafts(mergedClients, true);
     });
 
     return unsubSnapshot;
   }, [isCloudReady, userId, storageKey, migratedKey]);
 
-  // Keep localStorage cache synchronized
+  // Keep localStorage cache and rolling backup synchronized
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(clients));
+      if (clients.length > 0) {
+        let existingBackup: Record<string, Client> = {};
+        try {
+          const raw = localStorage.getItem(backupKey);
+          if (raw) existingBackup = JSON.parse(raw) as Record<string, Client>;
+        } catch {
+          existingBackup = {};
+        }
+        clients.forEach((c) => {
+          existingBackup[c.id] = c;
+        });
+        localStorage.setItem(backupKey, JSON.stringify(existingBackup));
+      }
+      if (hasLoadedCloudSnapshot) {
+        refreshRecoverableDrafts(clients, true);
+      }
     } catch {
       console.error('Failed to write to localStorage');
     }
-  }, [clients, storageKey]);
+  }, [clients, storageKey, backupKey, hasLoadedCloudSnapshot]);
+
+  const restoreRecoverableDraft = async (id: string) => {
+    const target = recoverableDrafts.find((d) => d.id === id);
+    if (!target) return;
+    const clientToRestore = target.client;
+    explicitlyDeletedIdsRef.current.delete(id);
+
+    const nextClients = [
+      clientToRestore,
+      ...clientsRef.current.filter((c) => c.id !== clientToRestore.id),
+    ];
+    clientsRef.current = nextClients;
+    setClients(nextClients);
+    setSelectedClientId(clientToRestore.id);
+    setRecoverableDrafts((prev) => prev.filter((d) => d.id !== id));
+
+    if (isCloudReady) {
+      try {
+        await updateClientInFirestore(clientToRestore, userId);
+        try {
+          sessionStorage.removeItem(`${SELLER_DRAFT_PREFIX}${id}`);
+        } catch {
+          // Ignore storage errors
+        }
+        setSyncError(null);
+      } catch (err) {
+        console.error('Failed to restore client to cloud:', err);
+        setSyncError(extractFriendlyFirestoreError(err));
+      }
+    } else {
+      pendingUpsertIdsRef.current.add(clientToRestore.id);
+    }
+  };
+
+  const dismissRecoverableDraft = (id: string) => {
+    explicitlyDeletedIdsRef.current.add(id);
+    try {
+      sessionStorage.removeItem(`${SELLER_DRAFT_PREFIX}${id}`);
+      const raw = localStorage.getItem(backupKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, Client>;
+        delete parsed[id];
+        localStorage.setItem(backupKey, JSON.stringify(parsed));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    setRecoverableDrafts((prev) => prev.filter((d) => d.id !== id));
+  };
 
   const selectedClient = clients.find((c) => c.id === selectedClientId) || null;
   const setSelectedClient = (client: Client | null) => {
@@ -342,6 +548,19 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     if (!isCloudReady) {
       pendingUpsertIdsRef.current.add(id);
       return true;
+    }
+
+    const pendingCreate = inFlightCreateRef.current.get(id);
+    if (pendingCreate) {
+      try {
+        await pendingCreate;
+      } catch {
+        // Handled below via updateClientInFirestore upsert/create fallback
+      }
+      const latest = clientsRef.current.find((c) => c.id === id);
+      if (latest) {
+        updatedClient = latest;
+      }
     }
 
     try {
@@ -387,11 +606,18 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     setClients(nextClients);
 
     if (isCloudReady) {
-      void createClientInFirestore(newClient, userId).catch((err) => {
-        console.error('Firestore create failed:', err);
-        pendingUpsertIdsRef.current.add(newClient.id);
-        setSyncError('New client saved locally, retrying cloud sync...');
-      });
+      const createPromise = createClientInFirestore(newClient, userId)
+        .catch((err) => {
+          console.error('Firestore create failed:', err);
+          pendingUpsertIdsRef.current.add(newClient.id);
+          setSyncError(extractFriendlyFirestoreError(err));
+        })
+        .finally(() => {
+          if (inFlightCreateRef.current.get(newClient.id) === createPromise) {
+            inFlightCreateRef.current.delete(newClient.id);
+          }
+        });
+      inFlightCreateRef.current.set(newClient.id, createPromise);
     } else {
       pendingUpsertIdsRef.current.add(newClient.id);
     }
@@ -407,6 +633,19 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
   };
 
   const deleteClient = (id: string) => {
+    explicitlyDeletedIdsRef.current.add(id);
+    try {
+      sessionStorage.removeItem(`${SELLER_DRAFT_PREFIX}${id}`);
+      const raw = localStorage.getItem(backupKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, Client>;
+        delete parsed[id];
+        localStorage.setItem(backupKey, JSON.stringify(parsed));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+
     const nextClients = clientsRef.current.filter((c) => c.id !== id);
     clientsRef.current = nextClients;
     setClients(nextClients);
@@ -703,14 +942,17 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
 
   const clearAllClients = () => {
     const idsToDelete = clientsRef.current.map((c) => c.id);
+    idsToDelete.forEach((id) => explicitlyDeletedIdsRef.current.add(id));
     clientsRef.current = [];
     setClients([]);
     try {
       localStorage.setItem(storageKey, JSON.stringify([]));
       localStorage.setItem(migratedKey, '1');
+      localStorage.removeItem(backupKey);
     } catch {
       console.error('Failed to write to localStorage');
     }
+    setRecoverableDrafts([]);
     setHasUnsavedCriteria(false);
     setSelectedClientId(null);
 
@@ -898,6 +1140,9 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
         setBrandColor,
         syncError,
         clearSyncError,
+        recoverableDrafts,
+        restoreRecoverableDraft,
+        dismissRecoverableDraft,
         addClient,
         updateClient,
         deleteClient,

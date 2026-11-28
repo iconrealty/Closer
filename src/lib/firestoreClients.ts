@@ -464,41 +464,54 @@ export async function updateClientInFirestore(
   const docRef = doc(db, 'clients', safeId);
   const fullMutable = buildMutableClientFields({ ...client, id: safeId }, userId);
 
+  let snap;
   try {
-    const snap = await getDoc(docRef);
-    if (!snap.exists()) {
+    snap = await getDoc(docRef);
+  } catch (getErr) {
+    handleFirestoreError(getErr, OperationType.GET, path);
+  }
+
+  if (!snap.exists()) {
+    try {
       await setDoc(docRef, {
         ...fullMutable,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
       return;
+    } catch (createErr) {
+      handleFirestoreError(createErr, OperationType.CREATE, path);
     }
+  }
 
-    const fields = { ...fullMutable };
-    // Exclude immutable identity keys on update
-    delete fields.id;
-    delete fields.ownerId;
+  const fields = { ...fullMutable };
+  // Exclude immutable identity keys on update
+  delete fields.id;
+  delete fields.ownerId;
 
-    try {
-      await updateDoc(docRef, {
-        ...fields,
-        updatedAt: serverTimestamp(),
-      });
-    } catch (updateErr) {
-      const existingData = snap.data();
-      if (existingData?.createdAt instanceof Timestamp) {
+  try {
+    await updateDoc(docRef, {
+      ...fields,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (updateErr) {
+    const existingData = snap.data();
+    if (existingData?.ownerId === userId) {
+      try {
         await setDoc(docRef, {
           ...fullMutable,
-          createdAt: existingData.createdAt,
+          createdAt:
+            existingData?.createdAt instanceof Timestamp
+              ? existingData.createdAt
+              : serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
         return;
+      } catch (recoveryErr) {
+        handleFirestoreError(recoveryErr, OperationType.UPDATE, path);
       }
-      throw updateErr;
     }
-  } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, path);
+    handleFirestoreError(updateErr, OperationType.UPDATE, path);
   }
 }
 
