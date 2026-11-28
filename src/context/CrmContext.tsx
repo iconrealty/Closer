@@ -103,6 +103,25 @@ interface CrmContextType {
 
 const CrmContext = createContext<CrmContextType | undefined>(undefined);
 
+function extractFriendlyFirestoreError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  try {
+    const parsed = JSON.parse(raw) as { error?: string; operationType?: string; path?: string };
+    if (parsed?.error) {
+      if (parsed.error.toLowerCase().includes('quota')) {
+        return 'Daily Firestore free-tier quota exceeded. Quota resets tomorrow.';
+      }
+      return `Could not save to cloud database (${parsed.operationType || 'write'}): ${parsed.error}`;
+    }
+  } catch {
+    // Not wrapped JSON
+  }
+  if (raw.toLowerCase().includes('quota')) {
+    return 'Daily Firestore free-tier quota exceeded. Quota resets tomorrow.';
+  }
+  return `Could not save to cloud database: ${raw}`;
+}
+
 function readCachedClients(storageKey: string): Client[] {
   try {
     const stored = localStorage.getItem(storageKey);
@@ -224,7 +243,7 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
         } catch (err) {
           console.error('Queued Firestore sync failed:', err);
           pendingUpsertIdsRef.current.add(id);
-          setSyncError('Could not save your latest changes to the cloud. Please try saving again.');
+          setSyncError(extractFriendlyFirestoreError(err));
         }
       }
     };
@@ -315,7 +334,10 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
     clientsRef.current = nextClients;
     setClients(nextClients);
 
-    if (!updatedClient) return false;
+    if (!updatedClient) {
+      setSyncError('Could not locate this client record in memory. Please refresh and try again.');
+      return false;
+    }
 
     if (!isCloudReady) {
       pendingUpsertIdsRef.current.add(id);
@@ -328,7 +350,7 @@ export const CrmProvider: React.FC<{ userId: string; children: React.ReactNode }
       return true;
     } catch (err) {
       console.error('Firestore update failed:', err);
-      setSyncError('Changes could not be saved to your database. Please check your connection and save again.');
+      setSyncError(extractFriendlyFirestoreError(err));
       return false;
     }
   };

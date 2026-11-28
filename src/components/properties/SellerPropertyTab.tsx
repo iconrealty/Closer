@@ -73,6 +73,7 @@ export const SellerPropertyTab: React.FC<SellerPropertyTabProps> = ({
     setHasUnsavedCriteria,
     unsavedCriteriaWarningTick,
     triggerUnsavedCriteriaWarning,
+    syncError,
   } = useCrm();
 
   const topBarRef = useRef<HTMLDivElement>(null);
@@ -398,7 +399,7 @@ export const SellerPropertyTab: React.FC<SellerPropertyTabProps> = ({
       setTimeout(() => setSaveSuccessMsg(null), 3500);
     } else {
       setUnsavedWarningMsg(
-        'Could not save property info to your cloud database. Please check your connection and try saving again.'
+        'Could not save property info to your cloud database. See the error details above.'
       );
     }
   };
@@ -574,9 +575,9 @@ export const SellerPropertyTab: React.FC<SellerPropertyTabProps> = ({
           </div>
         </div>
 
-        {hasUnsavedChanges && unsavedWarningMsg && (
+        {hasUnsavedChanges && (syncError || unsavedWarningMsg) && (
           <div className="bg-rust-50 border border-rust-200 text-rust-800 px-3.5 py-2 rounded-lg flex items-center justify-between gap-2 text-xs font-medium">
-            <span>{unsavedWarningMsg}</span>
+            <span>{syncError || unsavedWarningMsg}</span>
             <button
               type="button"
               onClick={() => setUnsavedWarningMsg(null)}
